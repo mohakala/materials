@@ -97,6 +97,7 @@ def main():
 
 
 # Train the RF regressor
+# http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     reg = RandomForestRegressor(n_estimators=150, min_samples_split=1)
     reg.fit(features_train,y_train_num)
 
