@@ -1,4 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn import preprocessing
 import pandas as pd
 import numpy as np
@@ -51,18 +52,20 @@ def main():
         features[:,i]=df[featureName].factorize()[0]
 
     # Target vector numerical: yNum
-    yNum=df['Eads'].factorize()[0]
+    yNum=df['Eads'].values
+    if(True): print("Eads:\n",yNum)
 
     # Target vector binary: yBin
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
-    df['EadsBin']=df['Eads']
+    df['EadsBin']=df['Eads']   # CHECK
     EadsLim=0.4
     print('Limits: +-',EadsLim)
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
     df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
     yBin=df['EadsBin'].factorize()[0] 
 
-    if(False): print(df)
+    if(True): print("Data file:\n",df)
+    if(True): print("yNum:\n",yNum)
 
 
 # E1 Select the training and testing sets 
@@ -70,6 +73,10 @@ def main():
     # Note: Shuffling done after reading raw data
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
+    y_train_num, y_test_num = selectsets(yNum, sizeTestSet)
+    print("Test set binary:", y_test)
+    print("Test set numeric:", y_test_num)
+    
 
 
 
@@ -78,7 +85,6 @@ def main():
     clf.fit(features_train, y_train)
     print('oob_score error:',1.0-clf.oob_score_)
     print('feature names:      ',featureNames)
-
     print('feature importances:',clf.feature_importances_)
 
 
@@ -89,7 +95,17 @@ def main():
     print("Preds:",preds)
     print("True:",y_test)
 
-# TODO: RF regression
+
+# Train the RF regressor
+    reg = RandomForestRegressor(n_estimators=150, min_samples_split=1)
+    reg.fit(features_train,y_train_num)
+
+
+# Test the RF regressor
+    print("Test regression")
+    preds=reg.predict(features_test)
+    print("Preds:",preds)
+    print("Preds:",y_test_num)
 
 
 if __name__ == '__main__':
