@@ -3,11 +3,11 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import preprocessing
 import pandas as pd
 import numpy as np
+import platform
 
-import sys
-sys.path.insert(0, 'C:\Python34\data-analysis-python')
-
-from mfunc import lin
+# import sys
+# sys.path.insert(0, 'C:\Python34\data-analysis-python')
+# from mfunc import lin
 
 # A Get the data
 # B,C Clean and prepare the data
@@ -27,11 +27,16 @@ def main():
 
 # A Get the data
 # B,C Clean and prepare the data
-    rawdata='C:\\Python34\\datasets\\lowd071216.txt'
+
+    print('Running on:',platform.system())
+    if(platform.system() == 'Linux'):
+        rawdata="../../../Documents/Datasets/lowd071216.dat"
+    else:
+        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
+        
     dfraw = pd.read_csv(rawdata)
     nSamples=len(dfraw)
     if(False): print("Original:\n",dfraw.head(10))
-    # Note: Shuffling done here
     df=dfraw.reindex(np.random.permutation(dfraw.index))
     if(True): print("Shuffled:\n",df.head(10))
     
@@ -42,7 +47,6 @@ def main():
     # Features
     # featureNames=['Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
     featureNames=['Z','q','Nval','Nn']
-
     print('Feature names:',featureNames)
     nFeatures=len(featureNames)
     features=np.zeros((nSamples,nFeatures))
@@ -63,11 +67,10 @@ def main():
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
     df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
     yBin=df['EadsBin'].factorize()[0] 
-
-    if(True): print("Data file:\n",df)
-    if(True): print("yNum:\n",yNum)
+    if(False): print("Data frame:\n",df)
 
 
+    
 # E1 Select the training and testing sets 
     sizeTestSet=5
     # Note: Shuffling done after reading raw data
@@ -88,6 +91,7 @@ def main():
     print('feature importances:',clf.feature_importances_)
 
 
+    
 # F Test the classifier model
     print('Test with the true testing set, size:',y_test.size)  
     preds=clf.predict(features_test)
@@ -106,7 +110,7 @@ def main():
     print("Test regression")
     preds=reg.predict(features_test)
     print("Preds:",preds)
-    print("Preds:",y_test_num)
+    print("True:",y_test_num)
 
 
 if __name__ == '__main__':
