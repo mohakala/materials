@@ -27,14 +27,16 @@ def readData():
     print('Reading the data')
     print('Running on:',platform.system())
     if(platform.system() == 'Linux'):
-        rawdata="../../../Documents/Datasets/lowd071216.dat"
+        rawdata="../../../Documents/Datasets/masterdata.dat"
+#        rawdata="../../../Documents/Datasets/lowd071216.dat"
     else:
         rawdata='C:\\Python34\\datasets\\lowd071216.txt'
     dfraw = pd.read_csv(rawdata)
-    if(False): print("Original:\n",dfraw.head(10))
+    if(True): print("Original:\n",dfraw.head(5))
     return(dfraw)
 
-
+    
+    
 def main():
 
 # A Get the data
@@ -43,6 +45,11 @@ def main():
     # Read the raw data
     dfraw=readData()
 
+    # Plots
+    
+    # Temporary stop if needed
+    # assert True==False, "Temporary stop"
+    
     # Shuffle the ordering of rows and print a sample
     df=dfraw.reindex(np.random.permutation(dfraw.index))
     if(True): print("Shuffled:\n",df.head(8))
@@ -53,7 +60,7 @@ def main():
 # D Select the features and samples
     # Features
     # featureNames=['Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
-    featureNames=['Z','q','Nval','Nn']
+    featureNames=['Type','Z','q','Nval','Nn']
     print('Feature names:',featureNames)
     nFeatures=len(featureNames)
     features=np.zeros((nSamples,nFeatures))
@@ -96,7 +103,7 @@ def main():
     print('oob_score error:',1.0-clf.oob_score_)
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
-
+    print(' ')
 
     
 # F Test the classifier model
