@@ -22,24 +22,31 @@ def selectsets(data,sizeTestSet):
     testSet=data[-sizeTestSet:]
     return(trainingSet,testSet)
 
+    
+def readData():
+    print('Reading the data')
+    print('Running on:',platform.system())
+    if(platform.system() == 'Linux'):
+        rawdata="../../../Documents/Datasets/lowd071216.dat"
+    else:
+        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
+    dfraw = pd.read_csv(rawdata)
+    if(False): print("Original:\n",dfraw.head(10))
+    return(dfraw)
+
 
 def main():
 
 # A Get the data
 # B,C Clean and prepare the data
 
-    print('Running on:',platform.system())
-    if(platform.system() == 'Linux'):
-        rawdata="../../../Documents/Datasets/lowd071216.dat"
-    else:
-        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
-        
-    dfraw = pd.read_csv(rawdata)
-    nSamples=len(dfraw)
-    if(False): print("Original:\n",dfraw.head(10))
+    # Read the raw data
+    dfraw=readData()
+
+    # Shuffle the ordering of rows and print a sample
     df=dfraw.reindex(np.random.permutation(dfraw.index))
-    if(True): print("Shuffled:\n",df.head(10))
-    
+    if(True): print("Shuffled:\n",df.head(8))
+    nSamples=len(df)    
     print('finish reading data, length of data:',nSamples)
 
 
