@@ -60,7 +60,8 @@ def main():
 # D Select the features and samples
     # Features
     # featureNames=['Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
-    featureNames=['Type','Z','q','Nval','Nn']
+    # featureNames=['Type','Z','q','Nval','Nn']
+    featureNames=['Type','Z','Nn']
     print('Feature names:',featureNames)
     nFeatures=len(featureNames)
     features=np.zeros((nSamples,nFeatures))
@@ -76,7 +77,7 @@ def main():
     # Target vector binary: yBin
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
     df['EadsBin']=df['Eads']   # CHECK
-    EadsLim=0.4
+    EadsLim=0.3
     print('Limits: +-',EadsLim)
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
     df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
@@ -126,6 +127,23 @@ def main():
     print("Preds:",preds)
     print("True:",y_test_num)
 
+    
+# Test regression with user input
+    if (len(featureNames) == 3):
+        print(" ")
+        print("Give user input for:",featureNames)
+        in1=float(input())
+        in2=float(input())
+        in3=float(input())
+        userInput=np.array([in1, in2, in3]).reshape(1,-1)
+        # userInput=np.array([0,26,0,8,1]).reshape(1,-1)
+        print("User input:",userInput)    
+        preds=reg.predict(userInput)
+        print("Preds, Delta GH:      ",preds)
+        preds=clf.predict(userInput)
+        print("Preds, Classification:",preds)
+
+    print("End-main")
 
 if __name__ == '__main__':
     main()
