@@ -30,9 +30,16 @@ def readData():
         rawdata="../../../Documents/Datasets/masterdata.dat"
 #        rawdata="../../../Documents/Datasets/lowd071216.dat"
     else:
-        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
+#        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
+        rawdata='C:\\Python34\\datasets\\masterdata.dat'
+
     dfraw = pd.read_csv(rawdata)
-    if(True): print("Original:\n",dfraw.head(5))
+    print(dfraw.dtypes)
+    if(True):
+        print("Original:\n",dfraw.head(5))
+    if(False):
+        print(dfraw['Z'].values)
+
     return(dfraw)
 
     
@@ -52,37 +59,39 @@ def main():
     
     # Shuffle the ordering of rows and print a sample
     df=dfraw.reindex(np.random.permutation(dfraw.index))
-    if(True): print("Shuffled:\n",df.head(8))
+    if(True): print("Shuffled:\n",df.head(5))
     nSamples=len(df)    
     print('finish reading data, length of data:',nSamples)
 
-    print("CHECK BUG HERE!?")
-    print('for debug, dont shuffle')
-    df=dfraw
+    ishuffle=False
+    if (not ishuffle):
+        # for debug, dont shuffle
+        df=dfraw
+        print('NOTE: For debugging, no shuffle!')
+
 
 # D Select the features and samples
     # Features
-    featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
-    # featureNames=['Type','Z','q','Nval','Nn']
-    #featureNames=['Type','Z','Nn']
-    print('Feature names:',featureNames)
+    # featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
+    featureNames=['Type','Z','q','Nval','Nn']
+    # featureNames=['Type','Z','Nn']
+    print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
     features=np.zeros((nSamples,nFeatures))
     i=-1
     for featureName in featureNames:
-        if(True): print("featName:",featureName)
+        if(True): print("Factorizing featName:",featureName)
         i+=1
         features[:,i]=df[featureName].factorize()[0]
-        if(True): print("i,\n feat:",i,features[:,i])
+        if(False): print("i,\n feat:",i,features[:,i])
     
     # Target vector numerical: yNum
     yNum=df['Eads'].values
-    if(False): print("Eads:\n",yNum)
     if(False): print("Targets:\n",yNum)
 
-    # Target vector binary: yBin
+    # Target vector binary: yBin (a new variable)
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
-    df['EadsBin']=df['Eads']   # CHECK
+    df['EadsBin']=df['Eads']   
     EadsLim=0.3
     print('Limits: +-',EadsLim)
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
@@ -93,8 +102,9 @@ def main():
 
     
 # E1 Select the training and testing sets 
+# Note: Shuffling done after reading raw data
     sizeTestSet=5
-    # Note: Shuffling done after reading raw data
+    print("Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
     y_train_num, y_test_num = selectsets(yNum, sizeTestSet)
@@ -102,33 +112,32 @@ def main():
     print("Test set numeric:", y_test_num)
     
 
-
-
 # E2 Train the classifier model
     clf = RandomForestClassifier(n_estimators=500,max_features=3,oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
+    print(" \nTraining the classifier")
     print('oob_score error:',1.0-clf.oob_score_)
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
-    print(' ')
 
     
 # F Test the classifier model
     print('Test with the true testing set, size:',y_test.size)  
     preds=clf.predict(features_test)
-    print(features_test)
+    if(False): print(features_test)
     print("Preds:",preds)
     print("True:",y_test)
 
 
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
+    print(" \nTraining the regressor")
     reg = RandomForestRegressor(n_estimators=150, min_samples_split=1)
     reg.fit(features_train,y_train_num)
 
 
 # Test the RF regressor
-    print("Test regression")
+    print("Testing the regressor")
     preds=reg.predict(features_test)
     print("Preds:",preds)
     print("True:",y_test_num)
