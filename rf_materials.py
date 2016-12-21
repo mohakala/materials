@@ -34,7 +34,7 @@ def readData():
         rawdata='C:\\Python34\\datasets\\masterdata.dat'
 
     dfraw = pd.read_csv(rawdata)
-    print(dfraw.dtypes)
+    print("Data types in dataframe:\n",dfraw.dtypes)
     if(True):
         print("Original:\n",dfraw.head(5))
     if(False):
@@ -80,23 +80,28 @@ def main():
     features=np.zeros((nSamples,nFeatures))
     i=-1
     for featureName in featureNames:
-        if(True): print("Factorizing featName:",featureName)
         i+=1
         features[:,i]=df[featureName].factorize()[0]
+        if(True):
+            print("Factorizing featName, to type:",featureName,type(features[:,i]))
+            print("Type:",type(features[0,i]))
         if(False): print("i,\n feat:",i,features[:,i])
     
     # Target vector numerical: yNum
     yNum=df['Eads'].values
+    print("Type of yNum:",type(yNum))
     if(False): print("Targets:\n",yNum)
 
     # Target vector binary: yBin (a new variable)
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
     df['EadsBin']=df['Eads']   
+    print("Type of Eads:",type(df['Eads']))
     EadsLim=0.3
     print('Limits: +-',EadsLim)
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
     df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
     yBin=df['EadsBin'].factorize()[0] 
+    print("Type of yBin:",type(yBin))
     if(False): print("Data frame:\n",df)
 
 
