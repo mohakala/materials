@@ -56,23 +56,29 @@ def main():
     nSamples=len(df)    
     print('finish reading data, length of data:',nSamples)
 
+    print("CHECK BUG HERE!?")
+    print('for debug, dont shuffle')
+    df=dfraw
 
 # D Select the features and samples
     # Features
-    # featureNames=['Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
+    featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
     # featureNames=['Type','Z','q','Nval','Nn']
-    featureNames=['Type','Z','Nn']
+    #featureNames=['Type','Z','Nn']
     print('Feature names:',featureNames)
     nFeatures=len(featureNames)
     features=np.zeros((nSamples,nFeatures))
     i=-1
     for featureName in featureNames:
+        if(True): print("featName:",featureName)
         i+=1
         features[:,i]=df[featureName].factorize()[0]
-
+        if(True): print("i,\n feat:",i,features[:,i])
+    
     # Target vector numerical: yNum
     yNum=df['Eads'].values
-    if(True): print("Eads:\n",yNum)
+    if(False): print("Eads:\n",yNum)
+    if(False): print("Targets:\n",yNum)
 
     # Target vector binary: yBin
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
