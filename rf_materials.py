@@ -63,7 +63,7 @@ def main():
     nSamples=len(df)    
     print('finish reading data, length of data:',nSamples)
 
-    ishuffle=False
+    ishuffle=True
     if (not ishuffle):
         # for debug, dont shuffle
         df=dfraw
@@ -86,22 +86,27 @@ def main():
             print("Factorizing featName, to type:",featureName,type(features[:,i]))
             print("Type:",type(features[0,i]))
         if(False): print("i,\n feat:",i,features[:,i])
+
+    # This transformation, below, from float to int apparently not needed for RF
+    features=features.astype(int)
+    print("Type of features:",type(features[0,0]))
+
     
     # Target vector numerical: yNum
-    yNum=df['Eads'].values
-    print("Type of yNum:",type(yNum))
+    yNum=df['Eads'].values + 0.29
+    print("Type of yNum[0]:",type(yNum[0]))
     if(False): print("Targets:\n",yNum)
 
     # Target vector binary: yBin (a new variable)
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
     df['EadsBin']=df['Eads']   
-    print("Type of Eads:",type(df['Eads']))
+    print("Type of Eads[0]:",type(df['Eads'][0]))
     EadsLim=0.3
     print('Limits: +-',EadsLim)
     df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
     df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
     yBin=df['EadsBin'].factorize()[0] 
-    print("Type of yBin:",type(yBin))
+    print("Type of yBin[0]:",type(yBin[0]))
     if(False): print("Data frame:\n",df)
 
 
