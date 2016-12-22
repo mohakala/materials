@@ -64,10 +64,13 @@ def main():
     print('finish reading data, length of data:',nSamples)
 
     ishuffle=True
-    if (not ishuffle):
+    if (ishuffle):
+        print("Data frame rows shuffled")
+        pass
+    else:       
         # for debug, dont shuffle
         df=dfraw
-        print('NOTE: For debugging, no shuffle!')
+        print('NOTE: For debugging, data frame not shuffled!')
 
 
 # D Select the features and samples
@@ -93,19 +96,19 @@ def main():
 
     
     # Target vector numerical: yNum
-    yNum=df['Eads'].values + 0.29
+    yNum=df['Hads'].values + 0.29
     print("Type of yNum[0]:",type(yNum[0]))
     if(False): print("Targets:\n",yNum)
 
     # Target vector binary: yBin (a new variable)
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
-    df['EadsBin']=df['Eads']   
-    print("Type of Eads[0]:",type(df['Eads'][0]))
-    EadsLim=0.3
-    print('Limits: +-',EadsLim)
-    df.loc[ np.abs(df['Eads'] +0.29) > EadsLim  ,'EadsBin'] = 0
-    df.loc[ np.abs(df['Eads'] +0.29) <= EadsLim  ,'EadsBin'] = 1
-    yBin=df['EadsBin'].factorize()[0] 
+    df['HadsBin']=df['Hads']   
+    print("Type of Hads[0]:",type(df['Hads'][0]))
+    HadsLim=0.3
+    print('Limits: +-',HadsLim)
+    df.loc[ np.abs(df['Hads']) > HadsLim  ,'HadsBin'] = 0
+    df.loc[ np.abs(df['Hads']) <= HadsLim  ,'HadsBin'] = 1
+    yBin=df['HadsBin'].factorize()[0] 
     print("Type of yBin[0]:",type(yBin[0]))
     if(False): print("Data frame:\n",df)
 
@@ -123,7 +126,7 @@ def main():
     
 
 # E2 Train the classifier model
-    clf = RandomForestClassifier(n_estimators=500,max_features=3,oob_score=True,verbose=0)
+    clf = RandomForestClassifier(n_estimators=1000,max_features=3,oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     print(" \nTraining the classifier")
     print('oob_score error:',1.0-clf.oob_score_)
@@ -142,7 +145,7 @@ def main():
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     print(" \nTraining the regressor")
-    reg = RandomForestRegressor(n_estimators=150, min_samples_split=1)
+    reg = RandomForestRegressor(n_estimators=1000, min_samples_split=1)
     reg.fit(features_train,y_train_num)
 
 
