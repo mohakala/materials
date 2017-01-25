@@ -23,6 +23,26 @@ def selectsets(data,sizeTestSet):
     return(trainingSet,testSet)
 
     
+def printy(y1,y2):
+# Print two sets of values as a function of index
+    import matplotlib.pyplot as plt
+    fig=plt.figure(1)
+    ax=fig.add_subplot(111)
+    ax.plot([-12.0,12.0],[-0.5,-0.5],'k--')       
+    ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')       
+    ax.plot(y1,'o', mfc='None', ms=20, mew=4, label='True')
+    ax.plot(y2,'x', mfc='None', ms=20, mew=4, label='Predicted')
+    ax.legend(loc=0)  # , prop={'size':10}) 
+    ax.set_xlabel('Index of test case', fontsize=24)
+    ax.set_ylabel(r'$\Delta G_{\rm H}$ (eV)', fontsize=24)
+    ax.tick_params(axis='x', labelsize=24)
+    ax.tick_params(axis='y', labelsize=24)
+    xlimits=(-0.5,9.5)
+    ax.set_xlim(xlimits[0],xlimits[1])
+
+    plt.show()
+    
+    
 def readData():
     print('Reading the data')
     print('Running on:',platform.system())
@@ -36,7 +56,7 @@ def readData():
     dfraw = pd.read_csv(rawdata)
     print("Data types in dataframe:\n",dfraw.dtypes)
     if(True):
-        print("Original:\n",dfraw.head(5))
+        print("Head of original:\n",dfraw.head(5))
     if(False):
         print(dfraw['Z'].values)
 
@@ -98,34 +118,46 @@ def main():
 
     # Read the raw data
     dfraw=readData()
-
-    # Plots
-    
-    # Temporary stop if needed
-    # assert True==False, "Temporary stop"
-    
+        
     # Shuffle the ordering of rows and print a sample
-    df=dfraw.reindex(np.random.permutation(dfraw.index))
-    df=df.reset_index(drop=True)
-    if(True):
-        print("Shuffled:\n",df.head(4))
-    nSamples=len(df)    
-    print('finish reading data, length of data:',nSamples)
-
     ishuffle=True
     if (ishuffle):
+        df=dfraw.reindex(np.random.permutation(dfraw.index))
+        df=df.reset_index(drop=True)
+        if(True):
+            print("Head of shuffled:\n",df.head(4))
         print("*Data frame rows shuffled")
-        print("df[0]:",df['Hads'][0])
+        print("df[0]:",df['Hads'][0])  
     else:       
-        # for debug, dont shuffle (return to original dfraw)
+        # For debug, dont shuffle (use original dfraw)
         df=dfraw
-        print('NOTE: For debugging, data frame not shuffled!')
+        print('*NOTE: For debugging, data frame NOT shuffled!')
 
+    nSamples=len(df)    
+    print('Finished reading data, length of data:',nSamples)
+
+# C.1. Prepare separately the basal plane data and the edge data
+    print('TO DO')
+    pass    
+    
+
+# C.2 Add a new feature 'Coord' in the dataframe
+    # - for cases 0,2,3,6 it is 6
+    # - for case 5 it is 5
+    # - for case 1,4 it is 4
+    df.loc[ df['Type'] == 0 ,'Coord'] = 6
+    df.loc[ df['Type'] == 2 ,'Coord'] = 6
+    df.loc[ df['Type'] == 3 ,'Coord'] = 6
+    df.loc[ df['Type'] == 6 ,'Coord'] = 6
+    df.loc[ df['Type'] == 5 ,'Coord'] = 5
+    df.loc[ df['Type'] == 1 ,'Coord'] = 4
+    df.loc[ df['Type'] == 4 ,'Coord'] = 4
+
+    
 
 # D Select the features and samples
-    # Features
+    featureNames=['Type','Z','Nval','Nn','Coord']
     # featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
-    featureNames=['Type','Z','q','Nval','Nn']
     # featureNames=['Type','Z','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
@@ -139,7 +171,7 @@ def main():
             print("Type:",type(features[0,i]))
         if(False): print("i,\n feat:",i,features[:,i])
 
-    # This transformation, below, from float to int apparently not needed for RF
+    # This transformation below from float to int kept but apparently not needed for RF
     features=features.astype(int)
     print("Type of features:",type(features[0,0]))
 
@@ -152,13 +184,12 @@ def main():
 
 
     # Set limiting values for Hads
-    HadsLim=0.4
+    HadsLim=0.5
     print('*Limits: +-',HadsLim)
     
 
     # Target vector binary: yBin (a new variable)
-    # Create a new column 'HadsBin'
-    df['HadsBin']=0
+    # Create a new column 'HadsBin' in the dataframe
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
     df.loc[ np.abs(df['Hads']) > HadsLim  ,'HadsBin'] = 0
     df.loc[ np.abs(df['Hads']) <= HadsLim  ,'HadsBin'] = 1
@@ -172,10 +203,12 @@ def main():
         print("yNum:",yNum[:15])
         print("yBin:",yBin[:15])
 
+
+                     
+
     
 # E1 Select the training and testing sets 
-# Note: Shuffling done after reading raw data
-    sizeTestSet=5
+    sizeTestSet=10
     print("*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
@@ -185,7 +218,7 @@ def main():
     
 
 # E2 Train the classifier model
-    clf = RandomForestClassifier(n_estimators=500,max_features="auto",oob_score=True,verbose=0)
+    clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     print(" \nTraining the classifier")
     print('*oob_score error:',1.0-clf.oob_score_)
@@ -196,33 +229,35 @@ def main():
 # F Test the classifier model, oob_score, search the grid of parameters
 #   Only if size of test set is set to 1.
     if(sizeTestSet==1):
+        # Only oob_score, search the grid of parameters
         print("\nSize of test set = 1 -> performing grid search for parameters")
         gridtestClf(features_train, y_train)
-    else:
+    else: 
+        # Test with true test set
         print("\nSize of test set > 1, will not perform grid search for parameters")
+        print('Test with the true testing set, size:',y_test.size)  
+        preds=clf.predict(features_test)
+        if(False): print(features_test)
+        print("Preds:",preds)
+        print("True:",y_test)
+        
     
-# F Test the classifier model, test set
-    print('Test with the true testing set, size:',y_test.size)  
-    preds=clf.predict(features_test)
-    if(False): print(features_test)
-    print("Preds:",preds)
-    print("True:",y_test)
-
-
 
 
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     print(" \nTraining the regressor")
-    reg = RandomForestRegressor(n_estimators=500, min_samples_split=1)
+    reg = RandomForestRegressor(n_estimators=100, min_samples_split=1)
     reg.fit(features_train,y_train_num)
 
 
-# Test the RF regressor
-    print("Testing the regressor")
-    preds=reg.predict(features_test)
-    print("Preds:",preds)
-    print("True:",y_test_num)
+# Test the RF regressor with test set
+    if(sizeTestSet > 1):
+        print("Testing the regressor")
+        preds=reg.predict(features_test)
+        print("Preds:",preds)
+        print("True:",y_test_num)
+        printy(y_test_num,preds)
 
     
 # Test regression with user input
@@ -243,6 +278,7 @@ def main():
     print("End-main")
 
 
+    # Temporary stop if needed: assert True==False, "Temporary stop"
 
 
 
@@ -250,6 +286,8 @@ def main():
 if __name__ == '__main__':
     main()
 
+# Next ideas
+# - check which cases are badly predicted and train more
 
 # Dump
 
