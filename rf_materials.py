@@ -37,7 +37,7 @@ def printy(y1,y2):
     ax.set_ylabel(r'$\Delta G_{\rm H}$ (eV)', fontsize=24)
     ax.tick_params(axis='x', labelsize=24)
     ax.tick_params(axis='y', labelsize=24)
-    xlimits=(-0.5,9.5)
+    xlimits=(-0.5,7.5)
     ax.set_xlim(xlimits[0],xlimits[1])
 
     plt.show()
@@ -156,7 +156,8 @@ def main():
     
 
 # D Select the features and samples
-    featureNames=['Type','Z','Nval','Nn','Coord']
+    featureNames=['Type','Z','Nn','Coord']
+    # featureNames=['Type','Z','Nval','Nn','Coord']
     # featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
     # featureNames=['Type','Z','Nn']
     print(' \nFeature names:',featureNames)
@@ -184,7 +185,7 @@ def main():
 
 
     # Set limiting values for Hads
-    HadsLim=0.5
+    HadsLim=0.3
     print('*Limits: +-',HadsLim)
     
 
@@ -208,7 +209,7 @@ def main():
 
     
 # E1 Select the training and testing sets 
-    sizeTestSet=10
+    sizeTestSet=8
     print("*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
