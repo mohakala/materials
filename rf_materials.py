@@ -23,21 +23,49 @@ def selectsets(data,sizeTestSet):
     return(trainingSet,testSet)
 
     
-def printy(y1,y2):
+def genPredictions(reg,clf):
+# Generate and plot predictions
+
+    # Vector of values to be scanned
+    scanValues=np.array([42,26,27,28,29,45])    
+    # scanValues=np.array([0,25,26,27,28,29,30,41,42,46,78,79])
+    predsList=[]
+    for i in scanValues:    
+        userInput=np.array([3, i, 1, 6]).reshape(1,-1)
+        predsReg=reg.predict(userInput)
+        predsClf=clf.predict(userInput)
+        predsList.append(predsReg)
+        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
+
+    scanValues=np.array([42,26,27,28,29,45])    
+    predsList2=[]
+    for i in scanValues:    
+        userInput=np.array([6, i, 1, 5]).reshape(1,-1)
+        predsReg=reg.predict(userInput)
+        predsClf=clf.predict(userInput)
+        predsList2.append(predsReg)
+        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
+
+    # printy(predsList,(-999,-999)) # To plot only one set of values
+    printy(predsList,predsList2)
+    
+    
+def printy(pred,true):
 # Print two sets of values as a function of index
     import matplotlib.pyplot as plt
     fig=plt.figure(1)
     ax=fig.add_subplot(111)
     ax.plot([-12.0,12.0],[-0.5,-0.5],'k--')       
     ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')       
-    ax.plot(y1,'o', mfc='None', ms=20, mew=4, label='True')
-    ax.plot(y2,'x', mfc='None', ms=20, mew=4, label='Predicted')
+    ax.plot(pred,'x', mfc='None', ms=20, mew=4, label='Set 1 (or Predicted)')        
+    if (true[0] != -999):
+        ax.plot(true,'o', mfc='None', ms=20, mew=4, label='Set 2 (or True)')
     ax.legend(loc=0)  # , prop={'size':10}) 
     ax.set_xlabel('Index of test case', fontsize=24)
-    ax.set_ylabel(r'$\Delta G_{\rm H}$ (eV)', fontsize=24)
+    ax.set_ylabel('Target', fontsize=24)
     ax.tick_params(axis='x', labelsize=24)
     ax.tick_params(axis='y', labelsize=24)
-    xlimits=(-0.5,7.5)
+    xlimits=(-0.5,len(pred)-0.5)
     ax.set_xlim(xlimits[0],xlimits[1])
 
     plt.show()
@@ -166,7 +194,9 @@ def main():
     i=-1
     for featureName in featureNames:
         i+=1
-        features[:,i]=df[featureName].factorize()[0]
+        # features[:,i]=df[featureName].factorize()[0]
+        # Try this alternative:
+        features[:,i]=df[featureName].values
         if(False):
             print("Factorizing featName, to type:",featureName,type(features[:,i]))
             print("Type:",type(features[0,i]))
@@ -206,7 +236,6 @@ def main():
 
 
                      
-
     
 # E1 Select the training and testing sets 
     sizeTestSet=8
@@ -231,14 +260,17 @@ def main():
 #   Only if size of test set is set to 1.
     if(sizeTestSet==1):
         # Only oob_score, search the grid of parameters
-        print("\nSize of test set = 1 -> performing grid search for parameters")
-        gridtestClf(features_train, y_train)
+        if(False): 
+            print("\nSize of test set = 1 -> performing grid search for parameters")
+            gridtestClf(features_train, y_train)
+        else:
+            print("\nSkipping for now the grid search")
     else: 
         # Test with true test set
         print("\nSize of test set > 1, will not perform grid search for parameters")
         print('Test with the true testing set, size:',y_test.size)  
         preds=clf.predict(features_test)
-        if(False): print(features_test)
+        if(True): print("\nTest systems:",features_test)
         print("Preds:",preds)
         print("True:",y_test)
         
@@ -251,6 +283,7 @@ def main():
     reg = RandomForestRegressor(n_estimators=100, min_samples_split=1)
     reg.fit(features_train,y_train_num)
 
+    
 
 # Test the RF regressor with test set
     if(sizeTestSet > 1):
@@ -258,11 +291,12 @@ def main():
         preds=reg.predict(features_test)
         print("Preds:",preds)
         print("True:",y_test_num)
-        printy(y_test_num,preds)
+        printy(preds, y_test_num)
 
-    
+        
+            
 # Test regression with user input
-    if (len(featureNames) == 3):
+    if (False):
         print(" ")
         print("Give user input for:",featureNames)
         in1=float(input())
@@ -270,16 +304,21 @@ def main():
         in3=float(input())
         userInput=np.array([in1, in2, in3]).reshape(1,-1)
         # userInput=np.array([0,26,0,8,1]).reshape(1,-1)
-        print("User input:",userInput)    
-        preds=reg.predict(userInput)
-        print("Preds, Delta GH:      ",preds)
-        preds=clf.predict(userInput)
-        print("Preds, Classification:",preds)
+        predsReg=reg.predict(userInput)
+        predsClf=clf.predict(userInput)
+        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
 
-    print("End-main")
+        
+# Generate predictions    
+    if(True): 
+        genPredictions(reg,clf)
 
+        
+        
+    print("End-main")  
 
-    # Temporary stop if needed: assert True==False, "Temporary stop"
+    # Temporary stop if needed: 
+    # assert True==False, "Temporary stop"
 
 
 
