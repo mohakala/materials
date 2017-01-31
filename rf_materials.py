@@ -27,11 +27,11 @@ def genPredictions(reg,clf):
 # Generate and plot predictions
 
     # Vector of values to be scanned
-    scanValues=np.array([42,26,27,28,29,45])    
+    scanValues=np.array([6,7,8,9,10,11])    
     # scanValues=np.array([0,25,26,27,28,29,30,41,42,46,78,79])
     predsList=[]
     for i in scanValues:    
-        userInput=np.array([3, i, 1, 6]).reshape(1,-1)
+        userInput=np.array([6, i, 1, 6]).reshape(1,-1)
         predsReg=reg.predict(userInput)
         predsClf=clf.predict(userInput)
         predsList.append(predsReg)
@@ -52,6 +52,7 @@ def genPredictions(reg,clf):
     
 def printy(pred,true):
 # Print two sets of values as a function of index
+# Use as second argument (-999,-999) when you plot only one set  
     import matplotlib.pyplot as plt
     fig=plt.figure(1)
     ax=fig.add_subplot(111)
@@ -164,6 +165,10 @@ def main():
     nSamples=len(df)    
     print('Finished reading data, length of data:',nSamples)
 
+# A.1 Quick illustrate the target values
+    if(False):
+        printy(df['Hads'].values,(-999,-999))     
+    
 # C.1. Prepare separately the basal plane data and the edge data
     print('TO DO')
     pass    
@@ -184,9 +189,9 @@ def main():
     
 
 # D Select the features and samples
-    featureNames=['Type','Z','Nn','Coord']
+    featureNames=['Type','Nval','Nn','Coord']
+    # featureNames=['Type','Z','Nn','Coord']
     # featureNames=['Type','Z','Nval','Nn','Coord']
-    # featureNames=['Type','Z','q','Nval','Nn','Lowd1','Lowd2','Lowd3']
     # featureNames=['Type','Z','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
@@ -215,7 +220,7 @@ def main():
 
 
     # Set limiting values for Hads
-    HadsLim=0.3
+    HadsLim=0.5
     print('*Limits: +-',HadsLim)
     
 
@@ -251,7 +256,7 @@ def main():
     clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     print(" \nTraining the classifier")
-    print('*oob_score error:',1.0-clf.oob_score_)
+    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
 
@@ -280,8 +285,10 @@ def main():
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     print(" \nTraining the regressor")
-    reg = RandomForestRegressor(n_estimators=100, min_samples_split=1)
+    reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
     reg.fit(features_train,y_train_num)
+    print('*oob_score error:',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
+    print('feature importances:',reg.feature_importances_)
 
     
 
