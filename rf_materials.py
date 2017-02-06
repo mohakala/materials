@@ -57,15 +57,25 @@ def printy(pred,true):
     fig=plt.figure(1)
     ax=fig.add_subplot(111)
     ax.plot([-12.0,12.0],[-0.5,-0.5],'k--')       
-    ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')       
-    ax.plot(pred,'x', mfc='None', ms=20, mew=4, label='Set 1 (or Predicted)')        
+    ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')   
+
+    # Predicted data or Set 1    
+    label1='Set 1 (or Predicted)'
+    ax.plot(pred,'x', mfc='None', ms=28, mew=4, label=label1)        
+
+    # True data of Set 2
+    label2='Set 2 (or True)'
     if (true[0] != -999):
-        ax.plot(true,'o', mfc='None', ms=20, mew=4, label='Set 2 (or True)')
-    ax.legend(loc=0)  # , prop={'size':10}) 
-    ax.set_xlabel('Index of test case', fontsize=24)
-    ax.set_ylabel('Target', fontsize=24)
-    ax.tick_params(axis='x', labelsize=24)
-    ax.tick_params(axis='y', labelsize=24)
+        ax.plot(true,'o', mfc='None', ms=28, mew=4, label=label2)
+
+    ax.legend(loc=0, prop={'size':22}) 
+
+    genFontSize=26
+    ax.set_xlabel('Index of test case', fontsize=genFontSize)
+    ax.set_ylabel('Target', fontsize=genFontSize)
+    ax.tick_params(axis='x', labelsize=genFontSize)
+    ax.tick_params(axis='y', labelsize=genFontSize)
+
     xlimits=(-0.5,len(pred)-0.5)
     ax.set_xlim(xlimits[0],xlimits[1])
 
