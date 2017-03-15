@@ -1,14 +1,12 @@
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
-from sklearn import preprocessing
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
 import pandas as pd
 import numpy as np
 import platform
 
-# import sys
-# sys.path.insert(0, 'C:\Python34\data-analysis-python')
-# from mfunc import lin
 
 # A Get the data
 # B,C Clean and prepare the data
@@ -18,70 +16,90 @@ import platform
 # F Test the model
 
 
-def selectsets(data,sizeTestSet):
+def selectsets(data, sizeTestSet):
     trainingSet=data[:-sizeTestSet]
     testSet=data[-sizeTestSet:]
     return(trainingSet,testSet)
 
     
-def genPredictions(reg,clf):
-# Generate and plot predictions
+def genPredictions(reg, clf, featureNames):
+    """
+    Set input feature values by hand and make predictions
+    userInput = input features
+    reg = regressor 
+    clf = classifier
+    """
 
     # Vector of values to be scanned
     scanValues=np.array([6,7,8,9,10,11])    
     # scanValues=np.array([0,25,26,27,28,29,30,41,42,46,78,79])
+
     predsList=[]
     for i in scanValues:    
         userInput=np.array([6, i, 1, 6]).reshape(1,-1)
         predsReg=reg.predict(userInput)
         predsClf=clf.predict(userInput)
         predsList.append(predsReg)
-        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
+        print("Input, Preds, Target, Class:", userInput, predsReg, predsClf)
+
 
     scanValues=np.array([42,26,27,28,29,45])    
+
     predsList2=[]
     for i in scanValues:    
         userInput=np.array([6, i, 1, 5]).reshape(1,-1)
         predsReg=reg.predict(userInput)
         predsClf=clf.predict(userInput)
         predsList2.append(predsReg)
-        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
+        print("Input, Preds, Target, Class:", userInput, predsReg, predsClf)
 
     # printy(predsList,(-999,-999)) # To plot only one set of values
-    printy(predsList,predsList2)
+    printy(predsList, predsList2)
+
+
+    # Another way to test regressor with user input
+    if (False):
+        print(" ")
+        print("Give user input for:", featureNames)
+        in1=float(input())
+        in2=float(input())
+        in3=float(input())
+        userInput=np.array([in1, in2, in3]).reshape(1,-1)
+        # userInput=np.array([0,26,0,8,1]).reshape(1,-1)
+        predsReg=reg.predict(userInput)
+        predsClf=clf.predict(userInput)
+        print("Input, Preds, Target, Class:", userInput, predsReg, predsClf)
+
     
     
 def printy(pred,true):
-# Print two sets of values as a function of index
-# Use as second argument (-999,-999) when you plot only one set  
+    """
+    Print two sets of values as a function of index
+    Use as second argument true = (-999, -999) when you want to plot only one set  
+    """
     import matplotlib.pyplot as plt
     fig=plt.figure(1)
     ax=fig.add_subplot(111)
-    ax.plot([-12.0,12.0],[-0.5,-0.5],'k--')       
-    ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')   
+    ax.plot([-12.0,12.0], [-0.5,-0.5], 'k--')       
+    ax.plot([-12.0,12.0], [+0.5,+0.5], 'k--')   
 
-    # Predicted data or Set 1    
-#    label1='Set 1 (or Predicted)'
-    label1='Predicted'
-    ax.plot(pred,'x', mfc='None', ms=28, mew=4, label=label1)        
+    label1='Predicted'  # label1='Set 1 (or Predicted)'
+    ax.plot(pred, 'x', mfc='None', ms=28, mew=4, label=label1)        
 
-    # True data of Set 2
-#    label2='Set 2 (or True)'
-    label2='True'
     if (true[0] != -999):
-        ax.plot(true,'o', mfc='None', ms=28, mew=4, label=label2)
+        label2='True'       # label2='Set 2 (or True)'
+        ax.plot(true, 'o', mfc='None', ms=28, mew=4, label=label2)
 
     ax.legend(loc=0, prop={'size':22}) 
-
     genFontSize=26
     ax.set_xlabel('Index of test case', fontsize=genFontSize)
     ax.set_ylabel(r'$\Delta G_{\rm H}$ (eV)', fontsize=genFontSize)
-#    ax.set_ylabel('Target', fontsize=genFontSize)
+    # ax.set_ylabel('Target', fontsize=genFontSize)
     ax.tick_params(axis='x', labelsize=genFontSize)
     ax.tick_params(axis='y', labelsize=genFontSize)
 
-    xlimits=(-0.5,len(pred)-0.5)
-    ax.set_xlim(xlimits[0],xlimits[1])
+    xlimits=(-0.5, len(pred)-0.5)
+    ax.set_xlim(xlimits[0], xlimits[1])
 
     plt.show()
     
@@ -91,9 +109,7 @@ def readData():
     print('Running on:',platform.system())
     if(platform.system() == 'Linux'):
         rawdata="../../../Documents/Datasets/masterdata.dat"
-#        rawdata="../../../Documents/Datasets/lowd071216.dat"
     else:
-#        rawdata='C:\\Python34\\datasets\\lowd071216.txt'
         rawdata='C:\\Python34\\datasets\\masterdata_win.txt'
 
     dfraw = pd.read_csv(rawdata)
@@ -183,7 +199,7 @@ def main():
     if(False):
         printy(df['Hads'].values,(-999,-999))     
     
-# C.1. Prepare separately the basal plane data and the edge data
+# C.1. Prepare separately the case types 0 and 1-6
     print('TO DO')
     pass    
     
@@ -203,9 +219,9 @@ def main():
     
 
 # D Select the features and samples
-    featureNames=['Type','Nval','Nn','Coord']
+    # featureNames=['Type','Nval','Nn','Coord'] # Best for RF ?
     # featureNames=['Type','Z','Nn','Coord']
-    # featureNames=['Type','Z','Nval','Nn','Coord']
+    featureNames=['Type','Z','Nval','Nn','Coord']
     # featureNames=['Type','Z','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
@@ -235,19 +251,21 @@ def main():
 
     # Set limiting values for Hads
     HadsLim=0.5
-    print('*Limits: +-',HadsLim)
+    print('\n*Limits: +-',HadsLim)
     
 
     # Target vector binary: yBin (a new variable)
+
     # Create a new column 'HadsBin' in the dataframe
     # http://stackoverflow.com/questions/27117773/pandas-replace-values
     df.loc[ np.abs(df['Hads']) > HadsLim  ,'HadsBin'] = 0
     df.loc[ np.abs(df['Hads']) <= HadsLim  ,'HadsBin'] = 1
-    # yBin=df['HadsBin'].factorize()[0] # old, unnecessary version
     yBin=df['HadsBin'].values
-    yBin=yBin.astype(int) # probably unnecessary
+    yBin=yBin.astype(int) 
     print("Type of yBin[0]:",type(yBin[0]))
-    if(False): print("Data frame:\n",df[['Hads', 'HadsBin']])
+
+    if(False): 
+        print("Data frame:\n",df[['Hads', 'HadsBin']])
     if(True):
         print('Target num and bin (for checking):')
         print("yNum:",yNum[:15])
@@ -255,15 +273,32 @@ def main():
 
 
                      
-    
-# E1 Select the training and testing sets 
-    sizeTestSet=8
+# E1 Select the training and testing sets. Set doGridsearch = True/False
+    sizeTestSet = 8
+    doGridsearch = False   # If True, best to set sizeTestSet = 1
+
     print("*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
     y_train_num, y_test_num = selectsets(yNum, sizeTestSet)
     print("Test set binary:", y_test)
     print("Test set numeric:", y_test_num)
+    
+    
+
+# E2.2 Train the logistic-reg classifier TO DO
+#    clf = LogisticRegression()
+#    clf.fit(features_train, y_train)
+#    print(" \nTraining the classifier, logistic regression")
+#    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+    
+
+# E2.2 Train the decision tree classifier
+#    clf = DecisionTreeClassifier()
+#    clf.fit(features_train, y_train)
+#    print(" \nTraining the classifier, decision tree")
+#    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+    
     
 
 # E2 Train the classifier model
@@ -275,65 +310,53 @@ def main():
     print('feature importances:',clf.feature_importances_)
 
 
+
+
+
 # F Test the classifier model, oob_score, search the grid of parameters
-#   Only if size of test set is set to 1.
-    if(sizeTestSet==1):
-        # Only oob_score, search the grid of parameters
-        if(False): 
-            print("\nSize of test set = 1 -> performing grid search for parameters")
-            gridtestClf(features_train, y_train)
-        else:
-            print("\nSkipping for now the grid search")
-    else: 
-        # Test with true test set
-        print("\nSize of test set > 1, will not perform grid search for parameters")
+    if(doGridsearch):
+        # Search the grid of parameters, only oob_score
+        print("Performing grid search for parameters")
+        print("Size of the test set (not used):",sizeTestSet)
+        gridtestClf(features_train, y_train)
+    else:
+        print("No grid search for parameters")
+
+    if(sizeTestSet > 1):        
         print('Test with the true testing set, size:',y_test.size)  
         preds=clf.predict(features_test)
-        if(True): print("\nTest systems:",features_test)
+        if(False): 
+            print("\nTest systems:",features_test)
         print("Preds:",preds)
         print("True:",y_test)
         
     
 
-
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     print(" \nTraining the regressor")
-    reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
+    # reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
+    reg = RandomForestRegressor(n_estimators=100, oob_score=True,)
     reg.fit(features_train,y_train_num)
     print('*oob_score error:',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
     print('feature importances:',reg.feature_importances_)
 
     
 
-# Test the RF regressor with test set
+# Test the RF regressor with test set and make a plot (printy)
     if(sizeTestSet > 1):
-        print("Testing the regressor")
+        print("\nTesting the regressor with test set")
         preds=reg.predict(features_test)
-        print("Preds:",preds)
-        print("True:",y_test_num)
+        preds_true_list = np.concatenate((preds.reshape(-1,1), y_test_num.reshape(-1,1)), axis=1)
+        for value in preds_true_list:
+            print("Preds, True:", value)
         printy(preds, y_test_num)
 
         
-            
-# Test regression with user input
-    if (False):
-        print(" ")
-        print("Give user input for:",featureNames)
-        in1=float(input())
-        in2=float(input())
-        in3=float(input())
-        userInput=np.array([in1, in2, in3]).reshape(1,-1)
-        # userInput=np.array([0,26,0,8,1]).reshape(1,-1)
-        predsReg=reg.predict(userInput)
-        predsClf=clf.predict(userInput)
-        print("Input, Preds, Target, Class:",userInput,predsReg, predsClf)
-
         
-# Generate predictions    
-    if(True): 
-        genPredictions(reg,clf)
-
+# Generate predictions (reg and clf) from user input    
+    if(False): 
+        genPredictions(reg, clf, featureNames)
         
         
     print("End-main")  
