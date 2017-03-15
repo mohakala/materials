@@ -1,3 +1,4 @@
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import preprocessing
@@ -60,11 +61,13 @@ def printy(pred,true):
     ax.plot([-12.0,12.0],[+0.5,+0.5],'k--')   
 
     # Predicted data or Set 1    
-    label1='Set 1 (or Predicted)'
+#    label1='Set 1 (or Predicted)'
+    label1='Predicted'
     ax.plot(pred,'x', mfc='None', ms=28, mew=4, label=label1)        
 
     # True data of Set 2
-    label2='Set 2 (or True)'
+#    label2='Set 2 (or True)'
+    label2='True'
     if (true[0] != -999):
         ax.plot(true,'o', mfc='None', ms=28, mew=4, label=label2)
 
@@ -72,7 +75,8 @@ def printy(pred,true):
 
     genFontSize=26
     ax.set_xlabel('Index of test case', fontsize=genFontSize)
-    ax.set_ylabel('Target', fontsize=genFontSize)
+    ax.set_ylabel(r'$\Delta G_{\rm H}$ (eV)', fontsize=genFontSize)
+#    ax.set_ylabel('Target', fontsize=genFontSize)
     ax.tick_params(axis='x', labelsize=genFontSize)
     ax.tick_params(axis='y', labelsize=genFontSize)
 
