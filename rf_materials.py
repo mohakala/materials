@@ -282,7 +282,7 @@ def main():
 
                      
 # E1 Select the training and testing sets. Set doGridsearch = True/False
-    sizeTestSet = 7
+    sizeTestSet = 1
     doGridsearch = False   # If True, best to set sizeTestSet = 1
 
     print("\n*Size of the test set:",sizeTestSet)
@@ -327,6 +327,34 @@ def main():
         return()
 
 
+
+    def cross_val(model, X, target, featureNames):
+        from sklearn.cross_validation import KFold #For K-fold cross validation
+        """
+        General help function to do cross-validation
+        model  = classifier which has the method predict: model.predict(X)
+        X      = input samples, for example X = features_test
+        target = known target values
+        """
+
+        # n-fold cross-validation
+        n_folds=10
+        kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)
+        
+        error = []
+        for train, test in kf:
+            train_predictors = (X[train,:])
+            train_target = target[train]
+            if(False):
+                print('predictors:', train_predictors, 'shape:', train_predictors.shape, '\n')
+                print('target:', train_target)
+            model.fit(train_predictors, train_target)
+            error.append(model.score(X[test,:], target[test]))
+        score = np.mean(error)
+        print('*Score (cross-validation):', np.round(score, 4), 'folds:', n_folds)
+        print('error in the folds:', np.round(error, 2))
+
+        
     
 #       
 # Classifiers    
@@ -341,9 +369,10 @@ def main():
     lin()
     print(" \nTraining the Random Forest classifier")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
-    print('*score (training set):',clf.score(features_train, y_train))
+    print('*Score (training set):',clf.score(features_train, y_train))
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
+    cross_val(clf, features_train, y_train, featureNames)
     test(clf, features_test, y_test)
 
 
@@ -366,6 +395,7 @@ def main():
     logclf = LogisticRegression()
     logclf.fit(features_train, y_train)
     print('*log reg score (training set):',logclf.score(features_train, y_train))
+    cross_val(logclf, features_train, y_train, featureNames)
     test(logclf, features_test, y_test)
 
 
@@ -376,6 +406,7 @@ def main():
     dtclf.fit(features_train, y_train)
     dtclf_score = dtclf.score(features_train, y_train)
     print('*decision tree score (training set):',dtclf_score)
+    cross_val(dtclf, features_train, y_train, featureNames)
     test(dtclf, features_test, y_test)
 
 
@@ -395,7 +426,7 @@ def main():
     reg = RandomForestRegressor(n_estimators=100, oob_score=True,)
     reg.fit(features_train,y_train_num)
     print('*oob_score error (training set):',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
-    print('*score (R2) (training set)', reg.score(features_train, y_train_num))
+    print('*Score (R2) (training set)', reg.score(features_train, y_train_num))
     print('feature importances:',reg.feature_importances_)
     test(reg, features_test, y_test_num)
 
@@ -405,7 +436,7 @@ def main():
     print(" \nTraining the linear regressor")
     linreg = LinearRegression()
     linreg.fit(features_train, y_train_num)
-    print('*score (R2) (training set)', linreg.score(features_train, y_train_num))
+    print('*Score (R2) (training set)', linreg.score(features_train, y_train_num))
     test(linreg, features_test, y_test_num)
 
     
