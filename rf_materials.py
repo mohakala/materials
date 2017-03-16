@@ -282,7 +282,7 @@ def main():
 
                      
 # E1 Select the training and testing sets. Set doGridsearch = True/False
-    sizeTestSet = 8
+    sizeTestSet = 7
     doGridsearch = False   # If True, best to set sizeTestSet = 1
 
     print("\n*Size of the test set:",sizeTestSet)
@@ -293,23 +293,23 @@ def main():
     print("Test set numeric:", y_test_num)
     
     lin()
-    
+    lin()
 
 
-#       
-# Classifiers    
-#
 
 
     def test(model, X, target):
         """
         General help function to do the test over the test set
+        If target is non-integral, make also the plot
         model  = classifier which has the method predict: model.predict(X)
         X      = input samples, for example X = features_test
         target = known target values
         """
-        if (X.size <= 1):
-            print('No tests since X.size < = 1')
+        import numbers
+
+        if (target.size <= 1):
+            print('No tests since target.size < = 1')
             return()
         print('Test with test set, size:', target.size) 
         if(False): 
@@ -318,10 +318,19 @@ def main():
         preds_true_list = np.concatenate((preds.reshape(-1,1), target.reshape(-1,1)), axis=1)
         for value in preds_true_list:
             print("Preds, True:", value)        
-#        print("Preds:", preds)
-#        print("True: ", target)
+
         print('*Score (test set):', model.score(X, target))
+        if (isinstance(target[0], numbers.Integral)):
+            pass
+        else:
+            printy(preds, target)  # Make plot when target is a float
         return()
+
+
+    
+#       
+# Classifiers    
+#
 
 
     
@@ -332,6 +341,7 @@ def main():
     lin()
     print(" \nTraining the Random Forest classifier")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+    print('*score (training set):',clf.score(features_train, y_train))
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
     test(clf, features_test, y_test)
@@ -350,14 +360,12 @@ def main():
 
 
     
-    
 # E2.2 Train the logistic-reg classifier 
     lin()
     print(" \nTraining the logistic regression classifier")
     logclf = LogisticRegression()
     logclf.fit(features_train, y_train)
-    logclf_score = logclf.score(features_train, y_train)
-    print('*log reg score (training set):',logclf_score)
+    print('*log reg score (training set):',logclf.score(features_train, y_train))
     test(logclf, features_test, y_test)
 
 
@@ -367,7 +375,6 @@ def main():
     dtclf = DecisionTreeClassifier()
     dtclf.fit(features_train, y_train)
     dtclf_score = dtclf.score(features_train, y_train)
-    logclf_score = logclf.score(features_train, y_train)
     print('*decision tree score (training set):',dtclf_score)
     test(dtclf, features_test, y_test)
 
@@ -387,28 +394,30 @@ def main():
     # reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
     reg = RandomForestRegressor(n_estimators=100, oob_score=True,)
     reg.fit(features_train,y_train_num)
-    print('*oob_score error:',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
+    print('*oob_score error (training set):',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
+    print('*score (R2) (training set)', reg.score(features_train, y_train_num))
     print('feature importances:',reg.feature_importances_)
+    test(reg, features_test, y_test_num)
 
 
 # Train the linear regressor
+    lin()
     print(" \nTraining the linear regressor")
     linreg = LinearRegression()
     linreg.fit(features_train, y_train_num)
-    linreg_score = linreg.score(features_train, y_train_num)
-    print('*lin reg score (R2):',linreg_score)
-
+    print('*score (R2) (training set)', linreg.score(features_train, y_train_num))
+    test(linreg, features_test, y_test_num)
 
     
 
 # Test the RF regressor with test set and make a plot (printy)
-    if(sizeTestSet > 1):
-        print("\nTesting the regressor with test set")
-        preds=reg.predict(features_test)
-        preds_true_list = np.concatenate((preds.reshape(-1,1), y_test_num.reshape(-1,1)), axis=1)
-        for value in preds_true_list:
-            print("Preds, True:", value)
-        printy(preds, y_test_num)
+#    if(sizeTestSet > 1):
+#        print("\nTesting the regressor with test set")
+#        preds=reg.predict(features_test)
+#        preds_true_list = np.concatenate((preds.reshape(-1,1), y_test_num.reshape(-1,1)), axis=1)
+#        for value in preds_true_list:
+#            print("Preds, True:", value)
+#        printy(preds, y_test_num)
 
         
         
