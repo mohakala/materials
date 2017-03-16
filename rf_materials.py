@@ -83,8 +83,8 @@ def printy(pred,true):
     import matplotlib.pyplot as plt
     fig=plt.figure(1)
     ax=fig.add_subplot(111)
-    ax.plot([-12.0,12.0], [-0.5,-0.5], 'k--')       
-    ax.plot([-12.0,12.0], [+0.5,+0.5], 'k--')   
+    ax.plot([-12.0, len(pred)+1], [-0.5,-0.5], 'k--')       
+    ax.plot([-12.0, len(pred)+1], [+0.5,+0.5], 'k--')   
 
     label1='Predicted'  # label1='Set 1 (or Predicted)'
     ax.plot(pred, 'x', mfc='None', ms=28, mew=4, label=label1)        
@@ -170,6 +170,21 @@ def gridtestClf(features_train, y_train):
 # F Test the classifier model, oob_score
     gridtestClf(features_train, y_train)
 
+    return()
+
+
+def r2values(x, y, ypred, p):
+    # http://stackoverflow.com/questions/893657/how-do-i-calculate-r-squared-using-python-and-numpy
+    # Returns the values of r2 and adjusted r2
+    yave=np.mean(y)
+    ssreg = np.sum((ypred - yave)**2)   
+    ssreg = ssreg  # This values is not needed
+    sstot = np.sum((y - yave)**2) 
+    ssres = np.sum((ypred - y)**2)
+    r2 = 1- (ssres/sstot)  # not (ssreg/sstot) 
+    n=len(y) 
+    r2adj = 1- ( (ssres/(n-p-1)) / (sstot/(n-1)) ) 
+    return(r2, r2adj)
 
     
     
@@ -195,15 +210,23 @@ def main():
         df=dfraw
         print('*NOTE: For debugging, data frame NOT shuffled!')
 
-    nSamples=len(df)    
-    print('Finished reading data, length of data:',nSamples)
+    print('Finished reading data, length of data:',len(df))
     lin()
 
 # A.1 Quick illustrate the target values
     if(False):
         printy(df['Hads'].values,(-999,-999))     
     
-# C.1. Prepare separately the case types 0 and 1-6
+    
+# B.1 Drop one outlier (Hads value )
+    print('Drop the Hads outlier which is larger than 6.0')
+    df = df[df.Hads < 6.0]
+    if(False):
+        printy(df['Hads'].values,(-999,-999))     
+    print('Finished reading data, length of data:',len(df))
+    lin()
+
+# C.1. Later: Study separately the case types 0 and 1-6
     """
     TO DO
     """
@@ -226,12 +249,13 @@ def main():
     
 
 # D Select the features and samples
-    # featureNames=['Type','Nval','Nn','Coord'] # Best for RF ?
+    featureNames=['Type','Nval','Nn','Coord'] # Best for RF ?
     # featureNames=['Type','Z','Nn','Coord']
-    featureNames=['Type','Z','Nval','Nn','Coord']
+    # featureNames=['Type','Z','Nval','Nn','Coord']
     # featureNames=['Type','Z','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
+    nSamples=len(df) 
     features=np.zeros((nSamples,nFeatures))
     i=-1
     for featureName in featureNames:
@@ -282,7 +306,7 @@ def main():
 
                      
 # E1 Select the training and testing sets. Set doGridsearch = True/False
-    sizeTestSet = 1
+    sizeTestSet = 12
     doGridsearch = False   # If True, best to set sizeTestSet = 1
 
     print("\n*Size of the test set:",sizeTestSet)
@@ -296,6 +320,7 @@ def main():
     lin()
 
 
+                              
 
 
     def test(model, X, target):
@@ -317,14 +342,19 @@ def main():
         preds = model.predict(X)
         preds_true_list = np.concatenate((preds.reshape(-1,1), target.reshape(-1,1)), axis=1)
         for value in preds_true_list:
-            print("Preds, True:", value)        
-
-        print('*Score (test set):', model.score(X, target))
+            if(False):
+                print("Preds, True:", value)   
+        score = model.score(X, target)
+        print('*Score (test set):', score)
+        r2, r2adj = r2values(0, target, preds, 0)
+        if(False):
+            print('*Score (test set), own r2:', r2)
         if (isinstance(target[0], numbers.Integral)):
             pass
         else:
-            printy(preds, target)  # Make plot when target is a float
-        return()
+            if(True):
+                printy(preds, target)  # Make plot when target is a float
+        return(score)
 
 
 
@@ -338,9 +368,8 @@ def main():
         """
 
         # n-fold cross-validation
-        n_folds=10
-        kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)
-        
+        n_folds=5
+        kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)        
         error = []
         for train, test in kf:
             train_predictors = (X[train,:])
@@ -350,12 +379,19 @@ def main():
                 print('target:', train_target)
             model.fit(train_predictors, train_target)
             error.append(model.score(X[test,:], target[test]))
-        score = np.mean(error)
-        print('*Score (cross-validation):', np.round(score, 4), 'folds:', n_folds)
+        score = np.round(  np.mean(error), 4  )    
+        score_error_of_mean = np.round(  np.std(error, ddof=1) / np.sqrt(len(error)), 4  )
+        print('*Score (cross-validation):', score, '+-', score_error_of_mean, ' folds:', n_folds, 'total data:', len(target), 'validat. data:', len(test))
         print('error in the folds:', np.round(error, 2))
+        return(score, score_error_of_mean)
+
+
+
+
+
+       
 
         
-    
 #       
 # Classifiers    
 #
@@ -374,6 +410,45 @@ def main():
     print('feature importances:',clf.feature_importances_)
     cross_val(clf, features_train, y_train, featureNames)
     test(clf, features_test, y_test)
+
+
+# E1b Study the effect of the training set size 
+# - do CV and evaluate test data
+#
+# Max size is 119 - sizeTestSet(=12) = 107, and then y_train is the original y_train   
+    trainSize = np.array([70, 80, 90, 100, len(y_train)])
+    print('shape y_train:', y_train.shape)
+    print(trainSize)
+    errors = []
+    for i in trainSize:
+        features_train_par = features_train[:i, :] 
+        y_train_par = y_train[:i]
+        clf.fit(features_train, y_train)
+        par1, ___ = cross_val(clf, features_train_par, y_train_par, featureNames)
+        par2 = test(clf, features_test, y_test)
+        print('par2:',par2)
+        errors.append([par1, par2])
+    err = np.array(errors).reshape(-1,2)
+    print('accuracies CV, test:\n',err)
+    
+    import matplotlib.pyplot as plt
+    plt.figure()
+    print(err.shape, trainSize.shape)
+    print(trainSize.reshape(-1,1).ravel())
+    print(err[0,:])
+    plt.scatter(trainSize, err[:,0], label="cv")
+    plt.scatter(trainSize, err[:,1], label='test')
+    plt.legend()
+    plt.show()
+
+    
+    
+#    def collectErrorList():
+#        siz_test = 12 
+#        siz_train = np.array([60, 70, 80, 90, 100, 107])
+#        ecv = np.array([0.7, 0.729, 0.673, 0.6, 0.4])
+#        et = np.array([0.917, 0.583, 0.833, 0.333, 0.75 ])
+ 
 
 
 
