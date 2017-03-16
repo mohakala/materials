@@ -16,6 +16,8 @@ import platform
 # E2 Train the model    
 # F Test the model
 
+def lin():
+    print('-------------------------------------')
 
 def selectsets(data, sizeTestSet):
     trainingSet=data[:-sizeTestSet]
@@ -195,13 +197,16 @@ def main():
 
     nSamples=len(df)    
     print('Finished reading data, length of data:',nSamples)
+    lin()
 
 # A.1 Quick illustrate the target values
     if(False):
         printy(df['Hads'].values,(-999,-999))     
     
 # C.1. Prepare separately the case types 0 and 1-6
-    print('TO DO')
+    """
+    TO DO
+    """
     pass    
     
 
@@ -216,6 +221,7 @@ def main():
     df.loc[ df['Type'] == 5 ,'Coord'] = 5
     df.loc[ df['Type'] == 1 ,'Coord'] = 4
     df.loc[ df['Type'] == 4 ,'Coord'] = 4
+    print("Add new feature Coord to dataframe")
 
     
 
@@ -249,11 +255,12 @@ def main():
     print("Type of yNum[0]:",type(yNum[0]))
     if(False): print("Targets:\n",yNum)
 
+    lin()    
 
     # Set limiting values for Hads
     HadsLim=0.5
     print('\n*Limits: +-',HadsLim)
-    
+
 
     # Target vector binary: yBin (a new variable)
 
@@ -278,71 +285,101 @@ def main():
     sizeTestSet = 8
     doGridsearch = False   # If True, best to set sizeTestSet = 1
 
-    print("*Size of the test set:",sizeTestSet)
+    print("\n*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
     y_train, y_test = selectsets(yBin, sizeTestSet)
     y_train_num, y_test_num = selectsets(yNum, sizeTestSet)
     print("Test set binary:", y_test)
     print("Test set numeric:", y_test_num)
     
+    lin()
     
+
+
+#       
+# Classifiers    
+#
+
+
+    def test(model, X, target):
+        """
+        General help function to do the test over the test set
+        model  = classifier which has the method predict: model.predict(X)
+        X      = input samples, for example X = features_test
+        target = known target values
+        """
+        if (X.size <= 1):
+            print('No tests since X.size < = 1')
+            return()
+        print('Test with test set, size:', target.size) 
+        if(False): 
+            print("\nTest systems:", X)
+        preds = model.predict(X)
+        preds_true_list = np.concatenate((preds.reshape(-1,1), target.reshape(-1,1)), axis=1)
+        for value in preds_true_list:
+            print("Preds, True:", value)        
+#        print("Preds:", preds)
+#        print("True: ", target)
+        print('*Score (test set):', model.score(X, target))
+        return()
+
 
     
 
-# E2.2 Train the decision tree classifier
-#    clf = DecisionTreeClassifier()
-#    clf.fit(features_train, y_train)
-#    print(" \nTraining the classifier, decision tree")
-#    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
-    
-    
-
-# E2 Train the Random Forest classifier model
+# E2 Train and test the Random Forest classifier model
     clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
+    lin()
     print(" \nTraining the Random Forest classifier")
-    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+    print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
+    test(clf, features_test, y_test)
 
 
 
 
-
-# F Test the Random Forest classifier model, oob_score, search the grid of parameters
+# G Grid search for parameters
     if(doGridsearch):
-        # Search the grid of parameters, only oob_score
+        # Search the grid of parameters
         print("Performing grid search for parameters")
-        print("Size of the test set (not used):",sizeTestSet)
+        print("Size of the test set (not used in training):",sizeTestSet)
         gridtestClf(features_train, y_train)
     else:
         print("No grid search for parameters")
 
-    if(sizeTestSet > 1):        
-        print('Test with the true testing set, size:', y_test.size)  
-        preds=clf.predict(features_test)
-        if(False): 
-            print("\nTest systems:", features_test)
-        print("Preds:" ,preds)
-        print("True:", y_test)
 
     
+    
 # E2.2 Train the logistic-reg classifier 
-    print(" \nTraining the logistic regressino classifier")
+    lin()
+    print(" \nTraining the logistic regression classifier")
     logclf = LogisticRegression()
     logclf.fit(features_train, y_train)
     logclf_score = logclf.score(features_train, y_train)
-    print('*log reg score:',logclf_score)
-    if(sizeTestSet > 1):        
-        print('Test with the true testing set, size:', y_test.size)  
-        preds=logclf.predict(features_test)
-        if(False): 
-            print("\nTest systems:", features_test)
-        print("Preds:" ,preds)
-        print("True:", y_test)
+    print('*log reg score (training set):',logclf_score)
+    test(logclf, features_test, y_test)
 
-    
-    
+
+# E2.3 Train the decision tree classifier
+    lin()
+    print(" \nTraining the decision tree classifier")
+    dtclf = DecisionTreeClassifier()
+    dtclf.fit(features_train, y_train)
+    dtclf_score = dtclf.score(features_train, y_train)
+    logclf_score = logclf.score(features_train, y_train)
+    print('*decision tree score (training set):',dtclf_score)
+    test(dtclf, features_test, y_test)
+
+
+#       
+# Regressors    
+#
+
+    lin()
+    lin()
+    lin()
+
 
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
@@ -375,7 +412,7 @@ def main():
 
         
         
-# Generate predictions (reg and clf) from user input    
+# Generate more predictions (reg and clf) from user input    
     if(False): 
         genPredictions(reg, clf, featureNames)
         
@@ -394,5 +431,14 @@ if __name__ == '__main__':
 # Next ideas
 # - check which cases are badly predicted and train more
 
+
 # Dump
+
+# F Test the Random Forest classifier model, oob_score, search the grid of parameters
+#    if(sizeTestSet > 1):        
+#        print('Test with the true testing set, size:', y_test.size)  
+#        preds=clf.predict(features_test)
+#        print("Preds:", preds)
+#        print("True:", y_test)
+
 
