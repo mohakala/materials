@@ -494,7 +494,7 @@ def main():
     clf = RandomForestClassifier(n_estimators=400,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     lin()
-    print(" \nTraining the Random Forest classifier, FINAL SELECTION")
+    print(" \nFINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('*Score (training set):',clf.score(features_train, y_train))
     print('feature names:      ',featureNames)
