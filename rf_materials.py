@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 import pandas as pd
 import numpy as np
 import platform
@@ -286,11 +287,6 @@ def main():
     
     
 
-# E2.2 Train the logistic-reg classifier TO DO
-#    clf = LogisticRegression()
-#    clf.fit(features_train, y_train)
-#    print(" \nTraining the classifier, logistic regression")
-#    print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     
 
 # E2.2 Train the decision tree classifier
@@ -301,10 +297,10 @@ def main():
     
     
 
-# E2 Train the classifier model
+# E2 Train the Random Forest classifier model
     clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
-    print(" \nTraining the classifier")
+    print(" \nTraining the Random Forest classifier")
     print('*oob_score error:',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
@@ -313,7 +309,7 @@ def main():
 
 
 
-# F Test the classifier model, oob_score, search the grid of parameters
+# F Test the Random Forest classifier model, oob_score, search the grid of parameters
     if(doGridsearch):
         # Search the grid of parameters, only oob_score
         print("Performing grid search for parameters")
@@ -323,23 +319,48 @@ def main():
         print("No grid search for parameters")
 
     if(sizeTestSet > 1):        
-        print('Test with the true testing set, size:',y_test.size)  
+        print('Test with the true testing set, size:', y_test.size)  
         preds=clf.predict(features_test)
         if(False): 
-            print("\nTest systems:",features_test)
-        print("Preds:",preds)
-        print("True:",y_test)
-        
+            print("\nTest systems:", features_test)
+        print("Preds:" ,preds)
+        print("True:", y_test)
+
+    
+# E2.2 Train the logistic-reg classifier 
+    print(" \nTraining the logistic regressino classifier")
+    logclf = LogisticRegression()
+    logclf.fit(features_train, y_train)
+    logclf_score = logclf.score(features_train, y_train)
+    print('*log reg score:',logclf_score)
+    if(sizeTestSet > 1):        
+        print('Test with the true testing set, size:', y_test.size)  
+        preds=logclf.predict(features_test)
+        if(False): 
+            print("\nTest systems:", features_test)
+        print("Preds:" ,preds)
+        print("True:", y_test)
+
+    
     
 
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
-    print(" \nTraining the regressor")
+    print(" \nTraining the Random Forest regressor")
     # reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
     reg = RandomForestRegressor(n_estimators=100, oob_score=True,)
     reg.fit(features_train,y_train_num)
     print('*oob_score error:',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
     print('feature importances:',reg.feature_importances_)
+
+
+# Train the linear regressor
+    print(" \nTraining the linear regressor")
+    linreg = LinearRegression()
+    linreg.fit(features_train, y_train_num)
+    linreg_score = linreg.score(features_train, y_train_num)
+    print('*lin reg score (R2):',linreg_score)
+
 
     
 
