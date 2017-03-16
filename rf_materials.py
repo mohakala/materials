@@ -125,15 +125,20 @@ def readData():
     return(dfraw)
 
 
-def gridtestClf(features_train, y_train):
+def gridtestClf(features_train, y_train, featureNames):
     print("Grid search of parameters of the classifier")
+    lin()
 
     nEst=[50,100,200,300,400,500,750,1000]
     for i in nEst:
         clf = RandomForestClassifier(n_estimators=i,oob_score=True,verbose=0)
         clf.fit(features_train, y_train)
         print('nEst, oob_score error:', i, 1.0-clf.oob_score_)
+        par1, ___ = cross_val(clf, features_train, y_train, featureNames)
+        # print('nEst, CV score:', i, par1)
+        
     print("Result: Some effect, looks like 500 is often best")
+    lin()
 
     nMaxf=["auto","sqrt","log2"]
     for i in nMaxf:
@@ -141,6 +146,7 @@ def gridtestClf(features_train, y_train):
         clf.fit(features_train, y_train)
         print('nMaxfeatures, oob_score error:', i, 1.0-clf.oob_score_)
     print("Result: Some effect, auto the best?")
+    lin()
 
     nLeaf=[1,2,3,4,5,10,50]
     for i in nLeaf:
@@ -148,6 +154,7 @@ def gridtestClf(features_train, y_train):
         clf.fit(features_train, y_train)
         print('nLeaf (leaf size), oob_score error:', i, 1.0-clf.oob_score_)
     print("Result: Looks like default=1 smaller the better")
+    lin()
 
     nDepth=[2,5,10,20]
     for i in nDepth:
@@ -155,20 +162,21 @@ def gridtestClf(features_train, y_train):
         clf.fit(features_train, y_train)
         print('nDepth, oob_score error:', i, 1.0-clf.oob_score_)
     print("Result: Use default")
+    lin()
 
-    print("Selectrion:")
-    clf = RandomForestClassifier(n_estimators=500,max_features="auto",oob_score=True,verbose=0)
+
+    print("Selection:")
+    clf = RandomForestClassifier(n_estimators=400,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     print('FINAL, oob_score error:', 1.0-clf.oob_score_)
+    cross_val(clf, features_train, y_train, featureNames)
     
     print("End grid search of parameters of the classifier")
-    # Temporary stop
-    # assert True==False
     return()
         
 
-# F Test the classifier model, oob_score
-    gridtestClf(features_train, y_train)
+### F Test the classifier model, oob_score
+##    gridtestClf(features_train, y_train)
 
     return()
 
@@ -186,6 +194,69 @@ def r2values(x, y, ypred, p):
     r2adj = 1- ( (ssres/(n-p-1)) / (sstot/(n-1)) ) 
     return(r2, r2adj)
 
+
+def test(model, X, target):
+    """
+    General help function to do the test over the test set
+    If target is non-integral, make also the plot
+    model  = classifier which has the method predict: model.predict(X)
+    X      = input samples, for example X = features_test
+    target = known target values
+    """
+    import numbers
+    if (target.size <= 1):
+        print('No tests since target.size < = 1')
+        return()
+    print('Test with test set, size:', target.size) 
+    if(False): 
+        print("\nTest systems:", X)
+    preds = model.predict(X)
+    preds_true_list = np.concatenate((preds.reshape(-1,1), target.reshape(-1,1)), axis=1)
+    for value in preds_true_list:
+        if(False):
+            print("Preds, True:", value)   
+    score = model.score(X, target)
+    print('*Score (test set):', score)
+    r2, r2adj = r2values(0, target, preds, 0)
+    if(False):
+        print('*Score (test set), own r2:', r2)
+    if (isinstance(target[0], numbers.Integral)):
+        pass
+    else:
+        if(True):
+            printy(preds, target)  # Make plot when target is a float
+    return(score)
+
+
+
+def cross_val(model, X, target, featureNames):
+    from sklearn.cross_validation import KFold #For K-fold cross validation
+    """
+    General help function to do cross-validation
+    model  = classifier which has the method predict: model.predict(X)
+    X      = input samples, for example X = features_test
+    target = known target values
+    """
+
+    # n-fold cross-validation
+    n_folds=5
+    kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)        
+    error = []
+    for train, test in kf:
+        train_predictors = (X[train,:])
+        train_target = target[train]
+        if(False):
+            print('predictors:', train_predictors, 'shape:', train_predictors.shape, '\n')
+            print('target:', train_target)
+        model.fit(train_predictors, train_target)
+        error.append(model.score(X[test,:], target[test]))
+    score = np.round(  np.mean(error), 4  )    
+    score_error_of_mean = np.round(  np.std(error, ddof=1) / np.sqrt(len(error)), 4  )
+    print('*Score (cross-validation):', score, '+-', score_error_of_mean, ' folds:', n_folds, ', total data:', len(target), ', validat. data:', len(test))
+    if(False):
+        print('error in the folds:', np.round(error, 2))
+    return(score, score_error_of_mean)
+
     
     
 def main():
@@ -199,6 +270,9 @@ def main():
     # Shuffle the ordering of rows and print a sample
     ishuffle=True
     if (ishuffle):
+        np.random.seed(0)  
+        print('Keep the intial shuffle fixed (always the same, with seed(0))')
+        print('Important since we want a frozen test set')
         df=dfraw.reindex(np.random.permutation(dfraw.index))
         df=df.reset_index(drop=True)
         if(True):
@@ -307,7 +381,6 @@ def main():
                      
 # E1 Select the training and testing sets. Set doGridsearch = True/False
     sizeTestSet = 12
-    doGridsearch = False   # If True, best to set sizeTestSet = 1
 
     print("\n*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
@@ -315,81 +388,29 @@ def main():
     y_train_num, y_test_num = selectsets(yNum, sizeTestSet)
     print("Test set binary:", y_test)
     print("Test set numeric:", y_test_num)
-    
+    print('Note: We use always the same test data')
     lin()
     lin()
 
 
-                              
+# E1b Now must shuffle randomly the training set
+    print(features_train.shape) 
+    print(y_train.shape)
+    print(y_train_num.shape)
 
+    # For shuffling, pack into same matrix
+    auxarray = np.concatenate((features_train, y_train.reshape(-1,1), y_train_num.reshape(-1,1)),axis=1)
+    print(auxarray.shape)
+    np.random.seed(None)  
+    np.random.shuffle(auxarray)
+    features_train = auxarray[:,0:features_train.shape[1]]   
+    y_train = auxarray[:,features_train.shape[1]]   
+    y_train_num = auxarray[:,features_train.shape[1]+1]   
 
-    def test(model, X, target):
-        """
-        General help function to do the test over the test set
-        If target is non-integral, make also the plot
-        model  = classifier which has the method predict: model.predict(X)
-        X      = input samples, for example X = features_test
-        target = known target values
-        """
-        import numbers
+    print(features_train.shape) 
+    print(y_train.shape)
+    print(y_train_num.shape)
 
-        if (target.size <= 1):
-            print('No tests since target.size < = 1')
-            return()
-        print('Test with test set, size:', target.size) 
-        if(False): 
-            print("\nTest systems:", X)
-        preds = model.predict(X)
-        preds_true_list = np.concatenate((preds.reshape(-1,1), target.reshape(-1,1)), axis=1)
-        for value in preds_true_list:
-            if(False):
-                print("Preds, True:", value)   
-        score = model.score(X, target)
-        print('*Score (test set):', score)
-        r2, r2adj = r2values(0, target, preds, 0)
-        if(False):
-            print('*Score (test set), own r2:', r2)
-        if (isinstance(target[0], numbers.Integral)):
-            pass
-        else:
-            if(True):
-                printy(preds, target)  # Make plot when target is a float
-        return(score)
-
-
-
-    def cross_val(model, X, target, featureNames):
-        from sklearn.cross_validation import KFold #For K-fold cross validation
-        """
-        General help function to do cross-validation
-        model  = classifier which has the method predict: model.predict(X)
-        X      = input samples, for example X = features_test
-        target = known target values
-        """
-
-        # n-fold cross-validation
-        n_folds=5
-        kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)        
-        error = []
-        for train, test in kf:
-            train_predictors = (X[train,:])
-            train_target = target[train]
-            if(False):
-                print('predictors:', train_predictors, 'shape:', train_predictors.shape, '\n')
-                print('target:', train_target)
-            model.fit(train_predictors, train_target)
-            error.append(model.score(X[test,:], target[test]))
-        score = np.round(  np.mean(error), 4  )    
-        score_error_of_mean = np.round(  np.std(error, ddof=1) / np.sqrt(len(error)), 4  )
-        print('*Score (cross-validation):', score, '+-', score_error_of_mean, ' folds:', n_folds, 'total data:', len(target), 'validat. data:', len(test))
-        print('error in the folds:', np.round(error, 2))
-        return(score, score_error_of_mean)
-
-
-
-
-
-       
 
         
 #       
@@ -411,37 +432,40 @@ def main():
     cross_val(clf, features_train, y_train, featureNames)
     test(clf, features_test, y_test)
 
+    lin()
 
-# E1b Study the effect of the training set size 
-# - do CV and evaluate test data
+# E1b Study the effect of the training set size on CV score
+# - do CV (also evaluate test data, but should not be considered here)
+# - seems that maximum amount of training data available (all - test data) is generally good
 #
 # Max size is 119 - sizeTestSet(=12) = 107, and then y_train is the original y_train   
-    trainSize = np.array([70, 80, 90, 100, len(y_train)])
-    print('shape y_train:', y_train.shape)
-    print(trainSize)
-    errors = []
-    for i in trainSize:
-        features_train_par = features_train[:i, :] 
-        y_train_par = y_train[:i]
-        clf.fit(features_train, y_train)
-        par1, ___ = cross_val(clf, features_train_par, y_train_par, featureNames)
-        par2 = test(clf, features_test, y_test)
-        print('par2:',par2)
-        errors.append([par1, par2])
-    err = np.array(errors).reshape(-1,2)
-    print('accuracies CV, test:\n',err)
+    print('Study the effect of amount of training data')           
+    print('Result: Generally maximum amount of training data should be used')
+    if(False):                           
+        trainSize = np.array([70, 80, 90, 100, len(y_train)])
+        print('shape y_train:', y_train.shape)
+        print(trainSize)
+        errors = []
+        for i in trainSize:
+            features_train_par = features_train[:i, :] 
+            y_train_par = y_train[:i]
+            clf.fit(features_train, y_train)
+            par1, ___ = cross_val(clf, features_train_par, y_train_par, featureNames)
+            par2 = test(clf, features_test, y_test)
+            errors.append([par1, par2])
+            err = np.array(errors).reshape(-1,2)
+        print('accuracies CV, test:\n',err)
     
-    import matplotlib.pyplot as plt
-    plt.figure()
-    print(err.shape, trainSize.shape)
-    print(trainSize.reshape(-1,1).ravel())
-    print(err[0,:])
-    plt.scatter(trainSize, err[:,0], label="cv")
-    plt.scatter(trainSize, err[:,1], label='test')
-    plt.legend()
-    plt.show()
+        import matplotlib.pyplot as plt
+        plt.figure()
+        print(err.shape, trainSize.shape)
+        print(trainSize.reshape(-1,1).ravel())
+        print(err[0,:])
+        plt.plot(trainSize, err[:,0], 'o-', label="cv")
+        plt.plot(trainSize, err[:,1], 'o-', label='test')
+        plt.legend()
+        plt.show()
 
-    
     
 #    def collectErrorList():
 #        siz_test = 12 
@@ -451,17 +475,33 @@ def main():
  
 
 
-
-
 # G Grid search for parameters
+    doGridsearch = False
     if(doGridsearch):
         # Search the grid of parameters
         print("Performing grid search for parameters")
         print("Size of the test set (not used in training):",sizeTestSet)
-        gridtestClf(features_train, y_train)
+        gridtestClf(features_train, y_train, featureNames)
     else:
         print("No grid search for parameters")
 
+
+# G1 How sensitive is the model to test data variation. Do this 
+# with random sampling from validation set
+
+
+# G2 Train again with the selection
+    clf = RandomForestClassifier(n_estimators=400,max_features="auto",oob_score=True,verbose=0)
+    clf.fit(features_train, y_train)
+    lin()
+    print(" \nTraining the Random Forest classifier, FINAL SELECTION")
+    print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+    print('*Score (training set):',clf.score(features_train, y_train))
+    print('feature names:      ',featureNames)
+    print('feature importances:',clf.feature_importances_)
+    cross_val(clf, features_train, y_train, featureNames)
+    test(clf, features_test, y_test)
+    lin()
 
     
 # E2.2 Train the logistic-reg classifier 
