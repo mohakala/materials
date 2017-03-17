@@ -270,13 +270,13 @@ def main():
     # Shuffle the ordering of rows and print a sample
     ishuffle=True
     if (ishuffle):
-        np.random.seed(0)  
-        print('Keep the intial shuffle fixed (always the same, with seed(0))')
-        print('Important since we want a frozen test set')
+        np.random.seed(1)  
+        print('Keep the intial shuffle fixed (always the same, with seed(1))')
+        print('- important since we want a frozen, always same test set')
         df=dfraw.reindex(np.random.permutation(dfraw.index))
         df=df.reset_index(drop=True)
         if(True):
-            print("Head of shuffled:\n",df.head(4))
+            print("===> Head of shuffled:\n",df.head(2))
         print("*Data frame rows shuffled")
         print("df[0]:",df['Hads'][0])  
     else:       
@@ -394,22 +394,29 @@ def main():
 
 
 # E1b Now must shuffle randomly the training set
-    print(features_train.shape) 
-    print(y_train.shape)
-    print(y_train_num.shape)
+    if(False):
+        # THis part not any more needed, since df already shuffled earlier
+        print("Shuffling the training set (test set fixed from the beginning)")
+        print("- shuffle with random_seed to always get same order")
+        print("- cross-validation includes the randomization")    
+        if (False):
+            print(features_train.shape) 
+            print(y_train.shape)
+            print(y_train_num.shape)
 
-    # For shuffling, pack into same matrix
-    auxarray = np.concatenate((features_train, y_train.reshape(-1,1), y_train_num.reshape(-1,1)),axis=1)
-    print(auxarray.shape)
-    np.random.seed(None)  
-    np.random.shuffle(auxarray)
-    features_train = auxarray[:,0:features_train.shape[1]]   
-    y_train = auxarray[:,features_train.shape[1]]   
-    y_train_num = auxarray[:,features_train.shape[1]+1]   
-
-    print(features_train.shape) 
-    print(y_train.shape)
-    print(y_train_num.shape)
+        # For shuffling, pack into one matrix and shuffle it along rows
+        auxarray = np.concatenate((features_train, y_train.reshape(-1,1), y_train_num.reshape(-1,1)),axis=1)
+        print(auxarray.shape)
+        np.random.seed(None)  
+        np.random.shuffle(auxarray)
+        features_train = auxarray[:,0:features_train.shape[1]]   
+        y_train = auxarray[:,features_train.shape[1]]   
+        y_train_num = auxarray[:,features_train.shape[1]+1]   
+        
+        if (False):
+            print(features_train.shape) 
+            print(y_train.shape)
+            print(y_train_num.shape)
 
 
         
@@ -420,7 +427,7 @@ def main():
 
     
 
-# E2 Train and test the Random Forest classifier model
+# E2 Train the Random Forest classifier model
     clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     lin()
@@ -475,7 +482,7 @@ def main():
  
 
 
-# G Grid search for parameters
+# G Grid search for Random Forest parameters
     doGridsearch = False
     if(doGridsearch):
         # Search the grid of parameters
@@ -486,15 +493,19 @@ def main():
         print("No grid search for parameters")
 
 
-# G1 How sensitive is the model to test data variation. Do this 
-# with random sampling from validation set
+# G1 How sensitive is the model to test data variation. Thhis 
+# could be done with random sampling from validation set. 
+# However, since cross-validation is used, it already indicates 
+# something on the sensitivity
 
 
-# G2 Train again with the selection
-    clf = RandomForestClassifier(n_estimators=400,max_features="auto",oob_score=True,verbose=0)
+
+# G2 Final training of the classifier, with final selection
+    clf = RandomForestClassifier(n_estimators=400, max_features="auto", oob_score=True, verbose=0, random_state=1)
     clf.fit(features_train, y_train)
     lin()
     print(" \nFINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
+    print("- Fix random_state to always get the same model")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('*Score (training set):',clf.score(features_train, y_train))
     print('feature names:      ',featureNames)
