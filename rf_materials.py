@@ -252,7 +252,8 @@ def cross_val(model, X, target, featureNames):
         error.append(model.score(X[test,:], target[test]))
     score = np.round(  np.mean(error), 4  )    
     score_error_of_mean = np.round(  np.std(error, ddof=1) / np.sqrt(len(error)), 4  )
-    print('*Score (cross-validation):', score, '+-', score_error_of_mean, ' folds:', n_folds, ', total data:', len(target), ', validat. data:', len(test))
+    std = np.round(np.std(error, ddof=1), 4)
+    print('*Score (cross-validation):', score, '+-', score_error_of_mean, '(std: ', std, ')', 'folds:', n_folds, ', total data:', len(target), ', validat. data:', len(test))
     if(False):
         print('error in the folds:', np.round(error, 2))
     return(score, score_error_of_mean)
@@ -270,7 +271,7 @@ def main():
     # Shuffle the ordering of rows and print a sample
     ishuffle=True
     if (ishuffle):
-        np.random.seed(1)  
+        np.random.seed(0)  
         print('Keep the intial shuffle fixed (always the same, with seed(1))')
         print('- important since we want a frozen, always same test set')
         df=dfraw.reindex(np.random.permutation(dfraw.index))
@@ -279,6 +280,7 @@ def main():
             print("===> Head of shuffled:\n",df.head(2))
         print("*Data frame rows shuffled")
         print("df[0]:",df['Hads'][0])  
+        np.random.seed(None)  
     else:       
         # For debug, dont shuffle (use original dfraw)
         df=dfraw
@@ -323,7 +325,7 @@ def main():
     
 
 # D Select the features and samples
-    featureNames=['Type','Nval','Nn','Coord'] # Best for RF ?
+    featureNames=['Type','Nval','Nn','Coord'] # Best for RF (according to CV)
     # featureNames=['Type','Z','Nn','Coord']
     # featureNames=['Type','Z','Nval','Nn','Coord']
     # featureNames=['Type','Z','Nn']
@@ -444,6 +446,7 @@ def main():
 # E1b Study the effect of the training set size on CV score
 # - do CV (also evaluate test data, but should not be considered here)
 # - seems that maximum amount of training data available (all - test data) is generally good
+# - studied for examples in the polymer article
 #
 # Max size is 119 - sizeTestSet(=12) = 107, and then y_train is the original y_train   
     print('Study the effect of amount of training data')           
@@ -501,16 +504,22 @@ def main():
 
 
 # G2 Final training of the classifier, with final selection
-    clf = RandomForestClassifier(n_estimators=400, max_features="auto", oob_score=True, verbose=0, random_state=1)
-    clf.fit(features_train, y_train)
     lin()
-    print(" \nFINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
-    print("- Fix random_state to always get the same model")
+    lin()
+    print("FINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
+    # Cross-validation part (random_state = None)
+    print("CROSS-VALIDATION DATA:")
+    clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=None)
+    clf.fit(features_train, y_train)
+    cross_val(clf, features_train, y_train, featureNames)
+    # Test set part
+    clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=1)
+    clf.fit(features_train, y_train)
+    print("TEST DATA: fix random_state to always get the same model")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
     print('*Score (training set):',clf.score(features_train, y_train))
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
-    cross_val(clf, features_train, y_train, featureNames)
     test(clf, features_test, y_test)
     lin()
 
