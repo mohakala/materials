@@ -541,6 +541,12 @@ def main():
     clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=None)
     clf.fit(features_train, y_train)
     cross_val(clf, features_train, y_train, featureNames)
+
+    cross_val_scores = np.array([0.8132, 0.8047, 0.7637, 0.7947, 0.7921, 0.7932, 0.8147, 0.7842])
+    std = np.round(np.std(cross_val_scores, ddof=1), 4)
+    sem = std / np.sqrt(len(cross_val_scores))  # standard error of the mean
+    print('*Ave, std, std-of-mean of CV scores:', np.mean(cross_val_scores), '/', std, '/', sem)
+    
     # Test set part
     clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=1)
     clf.fit(features_train, y_train)
