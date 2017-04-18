@@ -313,23 +313,63 @@ def main():
     else:       
         # For debug, dont shuffle (use original dfraw)
         df=dfraw
-        print('*NOTE: For debugging, data frame NOT shuffled!')
+        print('*NOTE: For debugg.qing, data frame NOT shuffled!')
+
+
 
     print('Finished reading data, length of data:',len(df))
     lin()
+
+
+    if(False):
+        print('Investigate the data')
+        print(df[np.abs(df['Hads']) > 5.0])
+        print(df.describe())
+    
+
+
 
 # A.1 Quick illustrate the target values
     if(False):
         printy(df['Hads'].values,(-999,-999))     
     
-    
-# B.1 Drop one outlier (Hads value )
-    print('Drop the Hads outlier which is larger than 6.0')
+
+# Drop values   
+    print('Drop cases |Hads| > 6.0')
     df = df[df.Hads < 6.0]
+
+    print('Drop cases Z = 0')
+    df = df[df.Z > 0]
+
+    print('Drop cases q != 0')
+    df = df[df.q == 0]
+
+
     if(False):
         printy(df['Hads'].values,(-999,-999))     
-    print('Finished reading data, length of data:',len(df))
+
+    print('Length of data:',len(df))
     lin()
+
+    if(True):
+        print('How many cases for each type of system')
+        s=0
+        for i in range(7):
+            print(len(df[df.Type == i]))
+            s += len(df[df.Type == i])
+        print('sum:', s)
+
+        print('How many cases for each Z')
+        s=0
+        for i in np.array([42, 26, 27, 28, 29, 46, 78]):
+            print('i, number:', i, len(df[df.Z == i]))
+            s += len(df[df.Z == i])
+        print('sum:', s)
+
+
+
+    assert True==False, "Temporary stop"
+
 
 # C.1. Later: Study separately the case types 0 and 1-6
     """
@@ -338,7 +378,7 @@ def main():
     pass    
     
 
-# C.2 Add a new feature 'Coord' in the dataframe
+# C.2 Add a new feature, nominal 'Coord' in the dataframe
     # - for cases 0,2,3,6 it is 6
     # - for case 5 it is 5
     # - for case 1,4 it is 4
