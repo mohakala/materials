@@ -84,7 +84,7 @@ def printDiag(true, pred, train, trainpred  ):
     x=np.linspace(-3,3,100)
     ax.plot(x, x, 'k--', alpha=0.75)
     ax.plot(train, trainpred, 'ro', ms=20, mfc='None', mew=2, alpha=0.35, label="training data")    
-    ax.plot(true, pred, 'bo', ms=20, label="test data")
+    ax.plot(true, pred, 'bo', ms=20, alpha=0.75, label="test data")
 
     xlimits=(-2.75, 2.0)
     ax.set_xlim(xlimits[0], xlimits[1])
@@ -158,56 +158,88 @@ def gridtestClf(features_train, y_train, featureNames):
     print("Grid search of parameters of the classifier")
     lin()
 
-    nEst=[50,100,200,300,400,500]
+#    nEst = [50,100,200,300,400,500]
+#    nEst = np.linspace(50, 500, 10).astype('int')
+    nEst = np.linspace(50, 500, 1).astype('int')
+    res = []
     for i in nEst:
         clf = RandomForestClassifier(n_estimators=i,oob_score=True,verbose=0)
         clf.fit(features_train, y_train)
-        print('nEst, oob_score error:', i, 1.0-clf.oob_score_)
-        par1, ___ = cross_val(clf, features_train, y_train, featureNames)
-        # print('nEst, CV score:', i, par1)
-        
-    print("Result: Some effect, looks like 100 is often best")
+        #print('nEst, oob_score error:', i, 1.0-clf.oob_score_)
+        par1, ___ = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+        print('nEst, CV score:', i, par1)
+        res.append(par1)
+    
+#    import matplotlib.pyplot as plt
+#    plt.figure()        
+#    plt.plot(nEst, res, 'o-')
+#    plt.show()
+
+    
+    print("Result: Some effect, choose 200 trees, often good")
+    nEst = 200
     lin()
+
+
+
+
 
     nMaxf=["auto","sqrt","log2"]
     for i in nMaxf:
-        clf = RandomForestClassifier(n_estimators=100,max_features=i,oob_score=True,verbose=0)
+        clf = RandomForestClassifier(n_estimators=nEst, max_features=i, oob_score=True, verbose=0)
         clf.fit(features_train, y_train)
-        print('nMaxfeatures, oob_score error:', i, 1.0-clf.oob_score_)
-    print("Result: Some effect, looks like log2 the best")
+#        print('nMaxfeatures, oob_score error:', i, 1.0-clf.oob_score_)
+        par1, ___ = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+        print('i, CV score:', i, par1)
+
+    print("Result: Some effect, looks like auto the best")
     lin()
+
+    nMaxf="auto"
+
+
+
 
     nLeaf=[1,2,3,4,5,10,50]
     for i in nLeaf:
-        clf = RandomForestClassifier(n_estimators=100,max_features="auto",min_samples_leaf=i,oob_score=True,verbose=0)
+        clf = RandomForestClassifier(n_estimators=nEst, max_features=nMaxf, min_samples_leaf=i,oob_score=True,verbose=0)
         clf.fit(features_train, y_train)
-        print('nLeaf (leaf size), oob_score error:', i, 1.0-clf.oob_score_)
+#        print('nLeaf (leaf size), oob_score error:', i, 1.0-clf.oob_score_)
+        par1, ___ = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+        print('i, CV score:', i, par1)
+
     print("Result: Looks like default=1 smaller the better")
     lin()
 
+
+
     nDepth=[2,5,10,20]
     for i in nDepth:
-        clf = RandomForestClassifier(n_estimators=100,max_features="auto",max_depth=i,oob_score=True,verbose=0)
+        clf = RandomForestClassifier(n_estimators=nEst,max_features=nMaxf,max_depth=i,oob_score=True,verbose=0)
         clf.fit(features_train, y_train)
-        print('nDepth, oob_score error:', i, 1.0-clf.oob_score_)
-    print("Result: Use default")
+#        print('nDepth, oob_score error:', i, 1.0-clf.oob_score_)
+        par1, ___ = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+        print('i, CV score:', i, par1)
+    print("Result: Use default (expand until pure...)")
     lin()
 
 
     print("Selection:")
-    clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
+    clf = RandomForestClassifier(n_estimators=nEst,max_features=nMaxf,oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     print('FINAL, oob_score error:', 1.0-clf.oob_score_)
     cross_val(clf, features_train, y_train, featureNames)
+
     
     print("End grid search of parameters of the classifier")
+
+
     return()
         
 
 ### F Test the classifier model, oob_score
 ##    gridtestClf(features_train, y_train)
 
-    return()
 
 
 def r2values(x, y, ypred, p):
@@ -258,7 +290,7 @@ def test(model, X, target):
 
 
 
-def cross_val(model, X, target, featureNames):
+def cross_val(model, X, target, featureNames, iprint=True):
     from sklearn.cross_validation import KFold #For K-fold cross validation
     """
     General help function to do cross-validation
@@ -268,7 +300,7 @@ def cross_val(model, X, target, featureNames):
     """
 
     # n-fold cross-validation
-    n_folds=5
+    n_folds=5  
     kf = KFold(target.shape[0], n_folds=n_folds, shuffle=True)        
     error = []
     for train, test in kf:
@@ -282,9 +314,13 @@ def cross_val(model, X, target, featureNames):
     score = np.round(  np.mean(error), 4  )    
     score_error_of_mean = np.round(  np.std(error, ddof=1) / np.sqrt(len(error)), 4  )
     std = np.round(np.std(error, ddof=1), 4)
-    print('*Score (cross-validation):', score, '+-', score_error_of_mean, '(std: ', std, ')', 'folds:', n_folds, ', total data:', len(target), ', validat. data:', len(test))
+
+    if(iprint):
+        print('*Score (cross-validation):', score, '+-', score_error_of_mean, '(std: ', std, ')', 'folds:', n_folds, ', total data:', len(target), ', validat. data:', len(test))
+
     if(False):
         print('error in the folds:', np.round(error, 2))
+
     return(score, score_error_of_mean)
 
     
@@ -300,8 +336,10 @@ def main():
     # Shuffle the ordering of rows and print a sample
     ishuffle=True
     if (ishuffle):
-        np.random.seed(1)  
-        print('Keep the intial shuffle fixed (always the same, with seed(1))')
+        # was: 1. with n=12 gives 1x78, 1x46, 1x42, 3x26  
+        np.random.seed(163519) # rand    
+        #
+        print('Keep the intial shuffle fixed (always the same, with seed(X))')
         print('- important since we want a frozen, always same test set')
         df=dfraw.reindex(np.random.permutation(dfraw.index))
         df=df.reset_index(drop=True)
@@ -368,7 +406,6 @@ def main():
 
 
 
-    assert True==False, "Temporary stop"
 
 
 # C.1. Later: Study separately the case types 0 and 1-6
@@ -395,9 +432,10 @@ def main():
 
 # D Select the features and samples
     featureNames=['Type','Nval','Nn','Coord'] # Best for RF (according to CV)
-    # featureNames=['Type','Z','Nn','Coord']
-    # featureNames=['Type','Z','Nval','Nn','Coord']
-    # featureNames=['Type','Z','Nn']
+    #featureNames=['Type','Z','Nn','Coord']
+    #featureNames=['Type','Z','Nval','Nn','Coord']
+    #featureNames=['Type','Z','Nn']
+    #featureNames=['Type','Nval','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
     nSamples=len(df) 
@@ -451,7 +489,7 @@ def main():
 
                      
 # E1 Select the training and testing sets. Set doGridsearch = True/False
-    sizeTestSet = 10
+    sizeTestSet = 14   # 14 = 0.12*119, as Mannodi
 
     print("\n*Size of the test set:",sizeTestSet)
     features_train, features_test = selectsets(features, sizeTestSet)
@@ -460,8 +498,17 @@ def main():
     print("Test set binary:", y_test)
     print("Test set numeric:", y_test_num)
     print('Note: We use always the same test data')
+
+    if(True):
+        print("Test set features Z:")
+        for i in range(sizeTestSet):
+            print(features_test[i, 1])
+
+
+
     lin()
     lin()
+    
 
 
 # E1b Now must shuffle randomly the training set
@@ -499,6 +546,9 @@ def main():
     
 
 # E2 Train the Random Forest classifier model
+
+# Model selection: Number of features
+
     clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
     clf.fit(features_train, y_train)
     lin()
@@ -508,18 +558,22 @@ def main():
     print('feature names:      ',featureNames)
     print('feature importances:',clf.feature_importances_)
     cross_val(clf, features_train, y_train, featureNames)
-    test(clf, features_test, y_test)
 
     lin()
+    print('--> Number of features: 4')
+
+
+
+
 
 # E1b Study the effect of the training set size on CV score
 # - do CV (also evaluate test data, but should not be considered here)
 # - seems that maximum amount of training data available (all - test data) is generally good
 # - studied for examples in the polymer article
 #
-# Max size is 119 - sizeTestSet(=12) = 107, and then y_train is the original y_train   
+# Max size is 119 - sizeTestSet(=14) = 105, and then y_train is the original y_train   
     print('Study the effect of amount of training data')           
-    print('Result: Generally maximum amount of training data should be used')
+    print('Result: On average maximum amount of training data should be used')
     if(False):                           
         trainSize = np.array([70, 80, 90, len(y_train)])
         print('shape y_train:', y_train.shape)
@@ -528,12 +582,12 @@ def main():
         for i in trainSize:
             features_train_par = features_train[:i, :] 
             y_train_par = y_train[:i]
-            clf.fit(features_train, y_train)
+            clf.fit(features_train_par, y_train_par)
             par1, ___ = cross_val(clf, features_train_par, y_train_par, featureNames)
             par2 = test(clf, features_test, y_test)
             errors.append([par1, par2])
             err = np.array(errors).reshape(-1,2)
-        print('accuracies CV, test:\n',err)
+        #print('accuracies CV, test:\n',err)
     
         import matplotlib.pyplot as plt
         plt.figure()
@@ -541,9 +595,13 @@ def main():
         print(trainSize.reshape(-1,1).ravel())
         print(err[0,:])
         plt.plot(trainSize, err[:,0], 'o-', label="cv")
-        plt.plot(trainSize, err[:,1], 'o-', label='test')
+        #plt.plot(trainSize, err[:,1], 'o-', label='test')
         plt.legend()
         plt.show()
+
+    print('--> Amount of training data: on ave maximum the best')
+
+    # assert True==False, "Temporary stop"
 
     
 #    def collectErrorList():
@@ -565,6 +623,10 @@ def main():
         print("No grid search for parameters")
 
 
+    print('SELECTED: 200 trees, auto')
+
+
+
 # G1 How sensitive is the model to test data variation. Thhis 
 # could be done with random sampling from validation set. 
 # However, since cross-validation is used, it already indicates 
@@ -572,23 +634,43 @@ def main():
 
 
 
+    """
+    FINAL SELECTION
+    """
+
+
 # G2 Final training of the classifier, with final selection
     lin()
     lin()
     print("FINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
+    print('SELECTED: 200 trees, auto')
+
     # Cross-validation part (random_state = None)
     print("CROSS-VALIDATION DATA:")
-    clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=None)
+    clf = RandomForestClassifier(n_estimators=200, max_features="auto", oob_score=True, verbose=0, random_state=None)
     clf.fit(features_train, y_train)
-    cross_val(clf, features_train, y_train, featureNames)
+ 
+    scores=[]
+    for i in range(20):
+        score = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+        scores.append(score[0])
+        print('cross val round, score:', i, score)
+    std = np.round(np.std(scores, ddof=1), 4)
+    sem = std / np.sqrt(len(scores))  # standard error of the mean
+    print('Scores:', scores)
+    
+#    cross_val_scores = np.array([0.8132, 0.8047, 0.7637, 0.7947, 0.7921, 0.7932, 0.8147, 0.7842])
 
-    cross_val_scores = np.array([0.8132, 0.8047, 0.7637, 0.7947, 0.7921, 0.7932, 0.8147, 0.7842])
-    std = np.round(np.std(cross_val_scores, ddof=1), 4)
-    sem = std / np.sqrt(len(cross_val_scores))  # standard error of the mean
-    print('*Ave, std, std-of-mean of CV scores:', np.mean(cross_val_scores), '/', std, '/', sem)
+
+    print('*Ave, std, std-of-mean of CV scores:', np.mean(scores), '/', std, '/', sem)
+
+
+
+    lin()
+    lin()
     
     # Test set part
-    clf = RandomForestClassifier(n_estimators=100, max_features="auto", oob_score=True, verbose=0, random_state=1)
+    clf = RandomForestClassifier(n_estimators=200, max_features="auto", oob_score=True, verbose=0, random_state=1)
     clf.fit(features_train, y_train)
     print("TEST DATA: fix random_state to always get the same model")
     print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
@@ -597,6 +679,9 @@ def main():
     print('feature importances:',clf.feature_importances_)
     test(clf, features_test, y_test)
     lin()
+    lin()
+
+
 
     
 # E2.2 Train the logistic-reg classifier 
@@ -620,6 +705,9 @@ def main():
     test(dtclf, features_test, y_test)
 
 
+
+
+
 #       
 # Regressors    
 #
@@ -633,7 +721,7 @@ def main():
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
     print(" \nTraining the Random Forest regressor")
     # reg = RandomForestRegressor(n_estimators=100, min_samples_split=1, oob_score=True,)
-    reg = RandomForestRegressor(n_estimators=100, oob_score=True, random_state=1)
+    reg = RandomForestRegressor(n_estimators=200, oob_score=True)
     reg.fit(features_train,y_train_num)
     print('*oob_score error (training set):',1.0-reg.oob_score_,' oob_score:',reg.oob_score_)
     print('*Score (R2) (training set)', reg.score(features_train, y_train_num))
@@ -650,10 +738,16 @@ def main():
     test(linreg, features_test, y_test_num)
 
 
+
+
 # Print results for 7 samples
     # printy(y_test_num[:7], (-999,-999))
     printDiag(y_test_num, reg.predict(features_test), y_train_num, reg.predict(features_train) )
     
+
+    assert True==False, "Temporary stop"
+
+
 
 # Test the RF regressor with test set and make a plot (printy)
 #    if(sizeTestSet > 1):
