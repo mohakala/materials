@@ -79,12 +79,26 @@ def printDiag(true, pred, train, trainpred  ):
     print(pred, pred.shape)
     for i in true: print(i)
     import matplotlib.pyplot as plt
-    fig=plt.figure(1)
+
+    # PNG
+    # fig=plt.figure(1)
+    # EPS
+    # http://stackoverflow.com/questions/332289/how-do-you-change-the-size-of-figures-drawn-with-matplotlib
+    fig=plt.figure(1, figsize=(9, 9))   #, dpi=1200) 
+
     ax=fig.add_subplot(111)
     x=np.linspace(-3,3,100)
     ax.plot(x, x, 'k--', alpha=0.75)
-    ax.plot(train, trainpred, 'ro', ms=20, mfc='None', mew=2, alpha=0.35, label="training data")    
-    ax.plot(true, pred, 'bo', ms=20, alpha=0.75, label="test data")
+
+    # PNG
+    # ax.plot(train, trainpred, 'ro', ms=20, mfc='None', mew=2, alpha=0.35, label="training data")    
+    # ax.plot(true, pred, 'bo', ms=20, alpha=0.75, label="test data")
+
+    # EPS
+    # Note: for saving as eps, alpha doesn't work. use different plot settings
+    # http://stackoverflow.com/questions/19638773/matplotlib-plots-lose-transparency-when-saving-as-ps-eps
+    ax.plot(train, trainpred, 'ro', ms=20, mfc='None', mew=1, alpha=0.35, label="training data")    
+    ax.plot(true, pred, 'bo', ms=20, alpha=0.75, label="test data")   #, mew=3, mfc='None')
 
     xlimits=(-2.75, 2.0)
     ax.set_xlim(xlimits[0], xlimits[1])
@@ -97,7 +111,10 @@ def printDiag(true, pred, train, trainpred  ):
 
 #    ax.legend(loc=0, prop={'size':22}) 
     ax.legend(loc=0, prop={'size':26}) 
-    
+
+    # plt.savefig('train_test_ver8.eps', format='eps', dpi=1200)
+    # plt.savefig('train_test_ver8.png', format='png', dpi=1200)
+    # http://stackoverflow.com/questions/4408813/png-to-eps-conversion-massive-increase-in-file-size
     plt.show()
     pass
 
