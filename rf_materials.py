@@ -517,9 +517,9 @@ def main():
     print('Note: We use always the same test data')
 
     if(True):
-        print("Test set features Z:")
+        print("Test set features, energy:")
         for i in range(sizeTestSet):
-            print(features_test[i, 1])
+            print(features_test[i, :], y_test_num[i])
 
 
 
@@ -566,18 +566,20 @@ def main():
 
 # Model selection: Number of features
 
-    clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
-    clf.fit(features_train, y_train)
-    lin()
-    print(" \nTraining the Random Forest classifier")
-    print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
-    print('*Score (training set):',clf.score(features_train, y_train))
-    print('feature names:      ',featureNames)
-    print('feature importances:',clf.feature_importances_)
-    cross_val(clf, features_train, y_train, featureNames)
+    study_number_of_features = False
+    if(study_number_of_features):
+        clf = RandomForestClassifier(n_estimators=100,max_features="auto",oob_score=True,verbose=0)
+        clf.fit(features_train, y_train)
+        lin()
+        print(" \nTraining the Random Forest classifier")
+        print('*oob_score error (training set):',1.0-clf.oob_score_,' oob_score:',clf.oob_score_)
+        print('*Score (training set):',clf.score(features_train, y_train))
+        print('feature names:      ',featureNames)
+        print('feature importances:',clf.feature_importances_)
+        cross_val(clf, features_train, y_train, featureNames)
 
-    lin()
-    print('--> Number of features: 4')
+        lin()
+        print('--> Number of features: 4')
 
 
 
@@ -589,9 +591,10 @@ def main():
 # - studied for examples in the polymer article
 #
 # Max size is 119 - sizeTestSet(=14) = 105, and then y_train is the original y_train   
-    print('Study the effect of amount of training data')           
-    print('Result: On average maximum amount of training data should be used')
     if(False):                           
+        print('Study the effect of amount of training data')           
+        print('Result: On average maximum amount of training data should be used')
+        
         trainSize = np.array([70, 80, 90, len(y_train)])
         print('shape y_train:', y_train.shape)
         print(trainSize)
@@ -616,7 +619,7 @@ def main():
         plt.legend()
         plt.show()
 
-    print('--> Amount of training data: on ave maximum the best')
+        print('--> Amount of training data: on ave maximum the best')
 
     # assert True==False, "Temporary stop"
 
