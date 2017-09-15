@@ -27,23 +27,101 @@ def selectsets(data, sizeTestSet):
     
 def genPredictions(reg, clf, featureNames):
     """
-    Set input feature values by hand and make predictions
+    Set input feature values to be scanned and make predictions
     userInput = input features
     reg = regressor 
     clf = classifier
     """
 
-    # Vector of values to be scanned
-    scanValues=np.array([6,7,8,9,10,11])    
-    # scanValues=np.array([0,25,26,27,28,29,30,41,42,46,78,79])
+    print('Features:', featureNames)
 
-    predsList=[]
-    for i in scanValues:    
-        userInput=np.array([6, i, 1, 6]).reshape(1,-1)
-        predsReg=reg.predict(userInput)
-        predsClf=clf.predict(userInput)
-        predsList.append(predsReg)
-        print("Input, Preds, Target, Class:", userInput, predsReg, predsClf)
+    # Vector of values to be scanned
+    # - Nval
+    # scanValues=np.array([3,4,6,7,8,9,10,11,12])    
+    # scanValues=np.array([0,25,26,27,28,29,30,41,42,46,78,79])
+    NvalScan = np.arange(6, 12, 1)
+
+
+    def getCoord(edgeType):
+        if(edgeType==5):
+            coord=5
+        elif(edgeType==1 or edgeType==4):
+            coord=4
+        else:
+            coord=6
+        return(coord)
+
+
+    def returnPreds(NvalScan, Nn, Z):
+        """ 
+        Return predictions for given params NvalScan, Nn, Z
+        """
+        preds=[]
+        for Nval in NvalScan:    
+            for edgeType in range(7):
+                coord = getCoord(edgeType)            
+                userInput=np.array([edgeType, Nval, Nn, coord]).reshape(1,-1)
+                predsReg=reg.predict(userInput)
+                predsClf=clf.predict(userInput)
+                preds.append(predsReg)
+                print("Input, Output, Class:", userInput, predsReg, predsClf)
+        preds = np.array(preds).reshape(len(NvalScan), 7)
+        return(preds)
+            
+
+    Nn=1
+    preds = returnPreds(NvalScan, Nn, Z=1)
+
+    Nn=2
+    preds2 = returnPreds(NvalScan, Nn, Z=1)
+
+    Nn=3
+    preds3 = returnPreds(NvalScan, Nn, Z=1)
+
+
+
+
+
+    def printResults():
+        import matplotlib.pyplot as plt
+        fig=plt.figure(1)
+
+        for i in range(7):        
+            if(i==0):
+                ax=fig.add_subplot(4, 2, 1)
+                ax.text(10, 0.5, 'b')
+            else:
+                # Order the panels correctly
+                if(i < 4):
+                    j=i*2+1
+                else:
+                    j=i+(i-4)
+                ax=fig.add_subplot(4, 2, j)
+
+            ax.plot([6.0, 11.0],[0.0, 0.0], 'k--')  
+            ax.plot(NvalScan, preds[:, i], 'bo-', label='1.nn')
+            ax.plot(NvalScan, preds2[:, i], 'ro-', label='2.nn')
+            ax.plot(NvalScan, preds3[:, i], 'go-', label='3.nn')
+
+#            ax.plot(NvalScan, 1.0 / (1.0 + np.abs(np.exp(preds[:, i]))), 'bo-', label='1.nn')
+
+            ax.set_ylabel('DG')
+            ax.set_xlabel(r'$N_{val}$')
+
+            if(i==0):
+                ax.legend(loc='lower left', prop={'size':10})
+            elif(j==3):
+                ax.text(6, 0.4, 'M')
+            elif(j==8):
+                ax.text(9.5, -0.25, 'S')
+
+        plt.show()
+
+    printResults()
+
+    # printxy(NvalScan, preds[:, 1])
+
+
 
 
     scanValues=np.array([42,26,27,28,29,45])    
@@ -57,11 +135,14 @@ def genPredictions(reg, clf, featureNames):
         print("Input, Preds, Target, Class:", userInput, predsReg, predsClf)
 
     # printy(predsList,(-999,-999)) # To plot only one set of values
-    printy(predsList, predsList2)
+    # printy(predsList, predsList2)
 
 
-    # Another way to test regressor with user input
-    if (False):
+def genPredictionsFromUserInput(reg, clf, featureNames):
+    """ 
+    Ask user input directly
+    """
+    if (True):
         print(" ")
         print("Give user input for:", featureNames)
         in1=float(input())
@@ -119,6 +200,15 @@ def printDiag(true, pred, train, trainpred  ):
     pass
 
 
+def printxy(x, y):
+    """
+    Simple (x,y) plot
+    """
+    import matplotlib.pyplot as plt
+    fig=plt.figure(1)
+    ax=fig.add_subplot(111)
+    ax.plot(x, y, 'ko-')
+    plt.show()
     
     
 def printy(pred,true):
@@ -301,8 +391,11 @@ def test(model, X, target):
     if (isinstance(target[0], numbers.Integral)):
         pass
     else:
-        if(True):
+        makePrint=False
+        if(makePrint):
             printy(preds, target)  # Make plot when target is a float
+        else:
+            print('>Not making the plot in function test(model, X, target), since makePrint=False')
     return(score)
 
 
@@ -449,10 +542,11 @@ def main():
 
 # D Select the features and samples
     featureNames=['Type','Nval','Nn','Coord'] # Best for RF (according to CV)
-    #featureNames=['Type','Z','Nn','Coord']
-    #featureNames=['Type','Z','Nval','Nn','Coord']
-    #featureNames=['Type','Z','Nn']
-    #featureNames=['Type','Nval','Nn']
+    ##featureNames=['Type','Nval','Nn','Z'] # Just testing the prediction
+    ##featureNames=['Type','Z','Nn','Coord']
+    ##featureNames=['Type','Z','Nval','Nn','Coord']
+    ##featureNames=['Type','Z','Nn']
+    ##featureNames=['Type','Nval','Nn']
     print(' \nFeature names:',featureNames)
     nFeatures=len(featureNames)
     nSamples=len(df) 
@@ -665,25 +759,29 @@ def main():
     print("FINAL SELECTION Training the Random Forest classifier, FINAL SELECTION")
     print('SELECTED: 200 trees, auto')
 
-    # Cross-validation part (random_state = None)
-    print("CROSS-VALIDATION DATA:")
     clf = RandomForestClassifier(n_estimators=200, max_features="auto", oob_score=True, verbose=0, random_state=None)
     clf.fit(features_train, y_train)
- 
-    scores=[]
-    for i in range(20):
-        score = cross_val(clf, features_train, y_train, featureNames, iprint=False)
-        scores.append(score[0])
-        print('cross val round, score:', i, score)
-    std = np.round(np.std(scores, ddof=1), 4)
-    sem = std / np.sqrt(len(scores))  # standard error of the mean
-    print('Scores:', scores)
-    
-#    cross_val_scores = np.array([0.8132, 0.8047, 0.7637, 0.7947, 0.7921, 0.7932, 0.8147, 0.7842])
 
+     
 
-    print('*Ave, std, std-of-mean of CV scores:', np.mean(scores), '/', std, '/', sem)
-
+    doCrossValidationData = False
+    if(doCrossValidationData):        
+        # Cross-validation part (random_state = None)
+        print("CROSS-VALIDATION DATA:")
+        
+        scores=[]
+        CVrounds = 20
+        for i in range(CVrounds):
+            score = cross_val(clf, features_train, y_train, featureNames, iprint=False)
+            scores.append(score[0])
+            print('cross val round, score:', i, score)
+        std = np.round(np.std(scores, ddof=1), 4)
+        sem = std / np.sqrt(len(scores))  # standard error of the mean
+        print('Scores:', scores)
+        print('*Ave, std, std-of-mean of CV scores:', np.mean(scores), '/', std, '/', sem)   
+        #    cross_val_scores = np.array([0.8132, 0.8047, 0.7637, 0.7947, 0.7921, 0.7932, 0.8147, 0.7842])
+    else:
+        print('*Cross-validation data part is skipped (doCrossValidationData = False) ')
 
 
     lin()
@@ -758,12 +856,19 @@ def main():
     test(linreg, features_test, y_test_num)
 
 
+# When the model is trained, we can generate predictions (reg and clf) from user input    
+    generatePredictions = True
+    if(generatePredictions): 
+        genPredictions(reg, clf, featureNames)
 
 
 # Print results for 7 samples
     # printy(y_test_num[:7], (-999,-999))
     printDiag(y_test_num, reg.predict(features_test), y_train_num, reg.predict(features_train) )
     
+
+ 
+
 
     assert True==False, "Temporary stop"
 
@@ -780,10 +885,7 @@ def main():
 
         
         
-# Generate more predictions (reg and clf) from user input    
-    if(False): 
-        genPredictions(reg, clf, featureNames)
-        
+       
         
     print("End-main")  
 
