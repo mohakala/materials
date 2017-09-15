@@ -64,32 +64,54 @@ def genPredictions(reg, clf, featureNames):
                 predsReg=reg.predict(userInput)
                 predsClf=clf.predict(userInput)
                 preds.append(predsReg)
-                print("Input, Output, Class:", userInput, predsReg, predsClf)
+                doPrint=False
+                if(doPrint):
+                    print("Input, Output, Class:", userInput, predsReg, predsClf)
         preds = np.array(preds).reshape(len(NvalScan), 7)
         return(preds)
             
 
     Nn=1
     preds = returnPreds(NvalScan, Nn, Z=1)
+    ipreds = 1.0 / (1.0 + np.exp(np.abs(preds)))
 
     Nn=2
     preds2 = returnPreds(NvalScan, Nn, Z=1)
+    ipreds2 = 1.0 / (1.0 + np.exp(np.abs(preds2)))
 
     Nn=3
     preds3 = returnPreds(NvalScan, Nn, Z=1)
+    ipreds3 = 1.0 / (1.0 + np.exp(np.abs(preds3)))
+
+    print(preds[3, 0], ipreds[3, 0], np.log(ipreds[3, 0]))
+    print(preds[3, 1], ipreds[3, 1], np.log(ipreds[3, 1]))
+    print(preds2[3, 0], ipreds2[3, 0], np.log(ipreds2[3, 0]))
+    print(preds2[3, 1], ipreds2[3, 1], np.log(ipreds2[3, 1]))
+    print(preds3[3, 0], ipreds3[3, 0], np.log(ipreds3[3, 0]))
+    print(preds3[3, 1], ipreds3[3, 1], np.log(ipreds3[3, 1]))
 
 
+    ipreds_all = ipreds + 2*ipreds2 + 2*ipreds3
+    ipreds_all = ipreds_all/(5*0.5)
+
+    print(preds3.shape)
+    print(ipreds3.shape)
+    print(ipreds_all.shape)
 
 
 
     def printResults():
         import matplotlib.pyplot as plt
         fig=plt.figure(1)
+        fig2=plt.figure(2)
 
         for i in range(7):        
             if(i==0):
                 ax=fig.add_subplot(4, 2, 1)
                 ax.text(10, 0.5, 'b')
+                ax2=fig2.add_subplot(4, 2, 1)
+                ax2.text(10, 0.5, 'b')
+                ax2.set_ylabel('i')
             else:
                 # Order the panels correctly
                 if(i < 4):
@@ -97,16 +119,33 @@ def genPredictions(reg, clf, featureNames):
                 else:
                     j=i+(i-4)
                 ax=fig.add_subplot(4, 2, j)
+                ax2=fig2.add_subplot(4, 2, j)
+                ax2.set_ylabel('i')
 
             ax.plot([6.0, 11.0],[0.0, 0.0], 'k--')  
             ax.plot(NvalScan, preds[:, i], 'bo-', label='1.nn')
             ax.plot(NvalScan, preds2[:, i], 'ro-', label='2.nn')
             ax.plot(NvalScan, preds3[:, i], 'go-', label='3.nn')
 
-#            ax.plot(NvalScan, 1.0 / (1.0 + np.abs(np.exp(preds[:, i]))), 'bo-', label='1.nn')
-
             ax.set_ylabel('DG')
             ax.set_xlabel(r'$N_{val}$')
+
+
+            ax2.plot([6.0, 11.0], [0.0, 0.0], 'k--')  
+            ax2.plot([6.0, 11.0], [np.log(ipreds_all[0, i]), np.log(ipreds_all[0, i])], 'g--')  
+
+            ax2.plot(NvalScan, np.log(ipreds_all[:, i]), 'bo-', label='1.nn')
+
+            #ax2.set_yscale('log')
+            
+            ylimits=(-0.8, 0.1)
+            ax2.set_ylim(ylimits[0], ylimits[1])
+
+
+
+            
+            ax2.set_xlabel(r'$N_{val}$')
+
 
             if(i==0):
                 ax.legend(loc='lower left', prop={'size':10})
@@ -249,7 +288,7 @@ def readData():
     if(platform.system() == 'Linux'):
         rawdata="../../../Documents/Datasets/masterdata.dat"
     else:
-        rawdata='C:\\Python34\\datasets\\masterdata_win.txt'
+        rawdata='C:\\Python34\\Datasets_git\\masterdata.dat'
 
     dfraw = pd.read_csv(rawdata)
     print("Data types in dataframe:\n",dfraw.dtypes)
@@ -864,7 +903,7 @@ def main():
 
 # Print results for 7 samples
     # printy(y_test_num[:7], (-999,-999))
-    printDiag(y_test_num, reg.predict(features_test), y_train_num, reg.predict(features_train) )
+#    printDiag(y_test_num, reg.predict(features_test), y_train_num, reg.predict(features_train) )
     
 
  
