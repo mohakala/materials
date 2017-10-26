@@ -290,8 +290,8 @@ def printy(pred,true):
     ax.set_xlim(xlimits[0], xlimits[1])
 
     plt.show()
-    
-    
+
+        
 def readData():
     print('Reading the data')
     print('Running on:',platform.system())
@@ -306,9 +306,13 @@ def readData():
         print("Head of original:\n",dfraw.head(5))
     if(False):
         print(dfraw['Z'].values)
+    
 
     return(dfraw)
 
+
+
+    
 
 def gridtestClf(features_train, y_train, featureNames):
     print("Grid search of parameters of the classifier")
@@ -491,6 +495,34 @@ def main():
 
     # Read the raw data
     dfraw=readData()
+    
+    
+    def writeData(dforig): 
+        # Write to file
+
+        df = dforig.copy()
+
+        # Drop values   
+        print('Drop cases |Hads| > 6.0')
+        df = df[df.Hads < 6.0]
+
+        print('Drop cases Z = 0')
+        df = df[df.Z > 0]
+
+        print('Drop cases q != 0')
+        df = df[df.q == 0]
+
+        featNames=['Type','Z','Nn','Hads'] 
+
+        np.savetxt('datavalues.txt', df[featNames].values, fmt='%i %i %i %1.3f')
+
+
+# Print values to datavalues.txt
+    if(True):
+        writeData(dfraw)
+
+
+
         
     # Shuffle the ordering of rows and print a sample
     ishuffle=True
@@ -542,6 +574,7 @@ def main():
     df = df[df.q == 0]
 
 
+
     if(False):
         printy(df['Hads'].values,(-999,-999))     
 
@@ -562,8 +595,6 @@ def main():
             print('i, number:', i, len(df[df.Z == i]))
             s += len(df[df.Z == i])
         print('sum:', s)
-
-
 
 
 
