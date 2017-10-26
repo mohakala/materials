@@ -883,6 +883,11 @@ def main():
     lin()
     lin()
 
+    def get_mean_errors(reg, X, y):
+        yhat = reg.predict(X)
+        mae = np.abs(y - yhat).mean()
+        rmse = np.sqrt(np.square(y - yhat).mean())
+        return(mae, rmse)
 
 # Train the RF regressor
 # http://stackoverflow.com/questions/20095187/regression-trees-or-random-forest-regressor-with-categorical-inputs
@@ -894,6 +899,16 @@ def main():
     print('*Score (R2) (training set)', reg.score(features_train, y_train_num))
     print('feature importances:',reg.feature_importances_)
     test(reg, features_test, y_test_num)
+
+# Print mean average and RMS errors
+    print('*MAE and RMSE:')
+    mae, rmse = get_mean_errors(reg, features_test, y_test_num)
+    print("mae, rmse:", mae, rmse)
+    # For comparison
+    from sklearn.metrics import mean_squared_error
+    print("For comparison, from sklearn.metrics:")
+    print(np.sqrt(mean_squared_error(y_test_num, reg.predict(features_test))))
+    print('R2 from reg.score(X, y):', reg.score(features_test, y_test_num))
 
 
 # Train the linear regressor
