@@ -108,10 +108,10 @@ def genPredictions(reg, clf, featureNames):
         for i in range(7):        
             if(i==0):
                 ax=fig.add_subplot(4, 2, 1)
-                ax.text(10, 0.5, 'b')
+                #ax.text(10, 0.5, 'b')
                 ax2=fig2.add_subplot(4, 2, 1)
-                ax2.text(10, -0.6, 'b')
-                ax2.set_ylabel(r'i')
+                #ax2.text(10, -0.6, 'b')
+                #ax2.set_ylabel(r'i')
             else:
                 # Order the panels correctly
                 if(i < 4):
@@ -120,16 +120,16 @@ def genPredictions(reg, clf, featureNames):
                     j=i+(i-4)
                 ax=fig.add_subplot(4, 2, j)
                 ax2=fig2.add_subplot(4, 2, j)
-                ax2.set_ylabel(r'i')
+                #ax2.set_ylabel(r'i')
 
             ax.plot([6.0, 11.0],[0.0, 0.0], 'k--')  
             ax.plot(NvalScan, preds[:, i], 'bo-', label='1nn')
             ax.plot(NvalScan, preds2[:, i], 'ro-', label='2nn')
             ax.plot(NvalScan, preds3[:, i], 'go-', label='3nn')
 
-            ax.set_ylabel('G')
+            #ax.set_ylabel('G')
 
-            ax2.set_xlabel(r'nval')
+            #ax2.set_xlabel(r'nval')
 
 
             ax2.plot([6.0, 11.0], [0.0, 0.0], 'k--')  
@@ -145,24 +145,27 @@ def genPredictions(reg, clf, featureNames):
 
 
 
-            ax2.set_xlabel(r'nv') 
+            #ax2.set_xlabel(r'nv') 
 
 
             if(i==0):
-                ax.legend(loc='lower left', prop={'size':10})
-
+                #ax.legend(loc='lower left', prop={'size':10})
+                pass
             elif(j==3):
-                ax.text(6, 0.4, 'M')
-                ax2.text(6, -0.3, 'M')
-                ax2.legend(loc='lower left', prop={'size':10})
-
+                #ax.text(6, 0.4, 'M')
+                #ax2.text(6, -0.3, 'M')
+                #ax2.legend(loc='lower left', prop={'size':10})
+                pass
             elif(j==8):
-                ax.text(9.5, -0.25, 'S')
-                ax2.text(9.5, -0.6, 'S')
+                #ax.text(9.5, -0.25, 'S')
+                #ax2.text(9.5, -0.6, 'S')
+                pass
             elif(j==4):
-                ax2.text(9.5, -0.6, 'S')            
+                #ax2.text(9.5, -0.6, 'S')            
+                pass
             elif(j==7):
-                ax2.text(9.5, -0.6, 'M')
+                #ax2.text(9.5, -0.6, 'M')
+                pass
 
         plt.show()
 
