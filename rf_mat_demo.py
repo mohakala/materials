@@ -180,14 +180,14 @@ def main():
     
     # Choose the machine learning model
     print('---')
-    print('Predicting the class label 0/1 (are we in the studid range +-', HadsLim,'eV ?')
-    print('Choosing the machine learning model')
-    randomForest = False
+    print('Predicting the class label 0/1 (are we in the desired range +-', HadsLim,'eV ?')
+    print('Choosing the machine learning model:')
+    randomForest = True
     if (randomForest):
-        print('Random Forest:')
+        print('  Random Forest')
         clf = RandomForestClassifier(n_estimators=200, max_features="auto", oob_score=True, verbose=0, random_state=None)
     else:
-        print('Logistic regression:')
+        print('  Logistic regression')
         clf = LogisticRegression()
 
 
@@ -202,6 +202,7 @@ def main():
 
     # How well do we do on the training set?
     print('---')
+    print('Predicting class label for training and test set')
     print('*Score (training set):',clf.score(features_train, y_train))
     
     # How well do we do on the test set?
@@ -213,7 +214,7 @@ def main():
     if(doCrossValidationData):        
         print("CROSS-VALIDATION DATA:")
         scores=[]
-        CVrounds = 5
+        CVrounds = 10
         for i in range(CVrounds):
             score = cross_val(clf, features_train, y_train, featureNames, iprint=False)
             scores.append(score[0])
@@ -228,14 +229,22 @@ def main():
 
 
     # Predicting numerical values - Regression model with Random Forest
+    # Train and test
     print('---')
-    print('Predicting numerical values')
+    print('Predicting numerical values for training and test set')
     reg = RandomForestRegressor(n_estimators=200, oob_score=True)
     reg.fit(features_train,y_train_num)
     print('*Score (training set) R^2:',reg.score(features_train, y_train_num))
     print('*Score (test set) R^2:',reg.score(features_test, y_test_num))
 
 
+    # Making predictions for new datapoints
+    print('---')
+    print('Making predictions for new input')
+    print('Example: Scan N_val = 7...11 for feature vector x=[1, N_val, 2, 5]:')
+    for N_val in range(7, 12):
+        xnew=np.array([1, N_val, 2, 5]).reshape(1, -1)
+        print('  New datapoint:', xnew, 'prediction for Delta G:', reg.predict(xnew))
     
     
 if __name__ == '__main__':
