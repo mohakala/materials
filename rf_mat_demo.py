@@ -204,6 +204,7 @@ def main():
     print('---')
     print('Predicting class label for training and test set')
     print('*Score (training set):',clf.score(features_train, y_train))
+    print('*Feature importances:',clf.feature_importances_)
     
     # How well do we do on the test set?
     print('*Score (test set):',clf.score(features_test, y_test))
